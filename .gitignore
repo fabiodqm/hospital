@@ -1,0 +1,8 @@
+.env
+.venv/
+db.sqlite3
+media/
+test-results/
+.install.ok
+__pycache__/
+*.py[cod]

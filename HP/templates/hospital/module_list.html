@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+{% load hospital_tags %}
+{% block page_title %}{{ module.title }}{% endblock %}
+{% block content %}
+<div class="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-end">
+    <div>
+        <div class="text-sm uppercase tracking-[.25em] text-emerald-300/70">Módulo</div>
+        <h1 class="mt-1 text-3xl font-bold tracking-tight">{{ module.title }}</h1>
+        <p class="mt-2 max-w-2xl text-sm text-slate-400">{{ module.subtitle }}</p>
+    </div>
+    {% if user.profile.role != 'paciente' %}
+    <a href="{% url 'module_create' slug %}" class="inline-flex items-center justify-center rounded-2xl bg-emerald-500 px-5 py-3 font-semibold text-slate-950 shadow-lg shadow-emerald-950/40 hover:bg-emerald-400">{{ module.create_label }}</a>
+    {% endif %}
+</div>
+
+<div class="mb-5 rounded-[1.5rem] border border-emerald-900/40 bg-[#0f1f18]/80 p-4 shadow-glow">
+    <form method="get" class="flex flex-col gap-3 md:flex-row">
+        <input name="q" value="{{ query }}" class="w-full rounded-2xl border border-emerald-900/50 bg-slate-950/70 px-4 py-3 text-sm outline-none focus:border-emerald-400" placeholder="Pesquisar neste módulo...">
+        <button class="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-5 py-3 text-sm font-semibold text-emerald-200 hover:bg-emerald-500/20">Filtrar</button>
+    </form>
+</div>
+
+{% if slug == 'exames' %}
+<div class="mb-6 overflow-hidden rounded-[1.5rem] border border-emerald-900/40 bg-[#0f1f18]/80 p-5 shadow-glow">
+    <div class="mb-4 flex flex-col justify-between gap-3 md:flex-row md:items-center">
+        <div>
+            <h2 class="text-xl font-black text-slate-50">Modelos prontos para exames</h2>
+            <p class="mt-1 text-sm text-slate-400">Use um esboço realista, edite o conteúdo e assine com sua assinatura médica.</p>
+        </div>
+        <a href="{% url 'exam_template_library' %}" class="btn-soft">Ver biblioteca completa</a>
+    </div>
+    <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        {% for template in exam_templates|slice:':8' %}
+        <a href="{% url 'module_create' 'exames' %}?modelo={{ template.pk }}" class="group rounded-2xl border border-emerald-900/40 bg-slate-950/60 p-4 transition hover:-translate-y-1 hover:border-emerald-400/50 hover:bg-emerald-500/10">
+            <div class="flex items-center justify-between gap-3">
+                <span class="rounded-full bg-emerald-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[.16em] text-emerald-300">{{ template.category }}</span>
+                <i data-lucide="file-plus-2" class="h-5 w-5 text-emerald-300"></i>
+            </div>
+            <h3 class="mt-3 line-clamp-2 font-bold text-slate-100">{{ template.name }}</h3>
+            <p class="mt-2 text-xs text-slate-500">{{ template.sample_material|default:'Conforme protocolo' }}</p>
+        </a>
+        {% empty %}
+        <div class="rounded-2xl border border-dashed border-emerald-900/50 p-5 text-sm text-slate-400">Nenhum modelo cadastrado. Rode o seed inicial.</div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% if slug == 'produtos' %}
+<div class="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+    {% for item in items %}
+    <article class="group overflow-hidden rounded-[1.7rem] border border-emerald-900/40 bg-[#0f1f18]/82 shadow-glow transition hover:-translate-y-1 hover:border-emerald-400/40">
+        <div class="h-40 bg-slate-950/50">
+            {% if item.image %}
+                <img src="{{ item.image.url }}" alt="{{ item.name }}" class="h-full w-full object-cover">
+            {% else %}
+                <div class="grid h-full place-items-center bg-gradient-to-br from-emerald-500/18 to-slate-950/30 text-emerald-200">
+                    <i data-lucide="package-plus" class="h-12 w-12"></i>
+                </div>
+            {% endif %}
+        </div>
+        <div class="p-5">
+            <div class="flex items-start justify-between gap-3">
+                <div>
+                    <h3 class="text-lg font-extrabold text-slate-50">{{ item.name }}</h3>
+                    <p class="mt-1 text-xs uppercase tracking-[.18em] text-emerald-300/80">{{ item.category }}</p>
+                </div>
+                <span class="rounded-full border px-3 py-1 text-xs {% if item.is_active %}border-emerald-500/30 bg-emerald-500/10 text-emerald-300{% else %}border-red-500/30 bg-red-500/10 text-red-300{% endif %}">{% if item.is_active %}Ativo{% else %}Inativo{% endif %}</span>
+            </div>
+            <p class="mt-3 line-clamp-2 text-sm text-slate-400">{{ item.description|default:'Sem descrição informada.' }}</p>
+            <div class="mt-5 flex items-end justify-between gap-4">
+                <div>
+                    <div class="text-xs text-slate-500">Preço</div>
+                    <div class="text-2xl font-black text-emerald-300">R$ {{ item.price }}</div>
+                </div>
+                <div class="text-right text-xs text-slate-400">Estoque<br><strong class="text-slate-100">{{ item.stock }}</strong></div>
+            </div>
+            <div class="mt-5 flex justify-end gap-2">
+                <a href="{% url 'module_edit' slug item.pk %}" class="btn-soft">Editar</a>
+                <form action="{% url 'module_archive' slug item.pk %}" method="post" onsubmit="return confirm('Arquivar este produto?')">
+                    {% csrf_token %}<button class="btn-soft">Arquivar</button>
+                </form>
+            </div>
+        </div>
+    </article>
+    {% empty %}
+    <div class="rounded-[1.5rem] border border-dashed border-emerald-900/50 p-10 text-center text-slate-400 md:col-span-2 xl:col-span-3">
+        <div class="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-3xl bg-emerald-500/10 text-emerald-300"><i data-lucide="package-plus"></i></div>
+        <h3 class="text-lg font-bold text-slate-200">Nenhum produto cadastrado</h3>
+        <p class="mt-2">Cadastre produtos ou serviços com imagem para melhorar o fluxo financeiro.</p>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="overflow-hidden rounded-[1.5rem] border border-emerald-900/40 bg-[#0f1f18]/80 shadow-glow">
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-emerald-900/30 text-sm">
+            <thead class="bg-slate-950/50 text-left text-xs uppercase tracking-wider text-slate-400">
+                <tr>
+                    {% for col in columns %}<th class="px-5 py-4">{{ items.0|field_label:col }}</th>{% endfor %}
+                    <th class="px-5 py-4 text-right">Ações</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-emerald-900/20">
+                {% for item in items %}
+                <tr class="hover:bg-emerald-500/5">
+                    {% for col in columns %}
+                    <td class="max-w-[260px] truncate px-5 py-4 text-slate-200">
+                        {% with value=item|attr:col %}
+                            {% if col == 'status' or col == 'result' or col == 'is_active' %}
+                                <span class="rounded-full border px-3 py-1 text-xs {{ value|badge_class }}">{{ value|default:'-' }}</span>
+                            {% elif col == 'message' %}
+                                <span title="{{ value }}">{{ value|truncatechars:80|default:'-' }}</span>
+                            {% else %}
+                                {{ value|default:'-' }}
+                            {% endif %}
+                        {% endwith %}
+                    </td>
+                    {% endfor %}
+                    <td class="px-5 py-4">
+                        <div class="flex justify-end gap-2">
+                            {% if slug == 'pacientes' %}<a href="{% url 'patient_detail' item.pk %}" class="btn-soft">Histórico</a>{% endif %}{% if slug == 'exames' %}<a href="{% url 'exam_print' item.pk %}" target="_blank" class="btn-soft">Documento</a>{% endif %}
+                            {% if user.profile.role != 'paciente' %}<a href="{% url 'module_edit' slug item.pk %}" class="btn-soft">Editar</a>{% endif %}
+                            {% if user.profile.role != 'paciente' %}
+                            <form action="{% url 'module_archive' slug item.pk %}" method="post" onsubmit="return confirm('Arquivar este registro?')">
+                                {% csrf_token %}
+                                <button class="btn-soft">Arquivar</button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="99" class="px-5 py-16 text-center text-slate-400">
+                        <div class="mx-auto max-w-md">
+                            <div class="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-3xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-300"><i data-lucide="search-x"></i></div>
+                            <div class="mb-3 text-lg font-semibold text-slate-200">Nenhum registro encontrado</div>
+                            <p>Crie o primeiro registro ou ajuste a pesquisa.</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

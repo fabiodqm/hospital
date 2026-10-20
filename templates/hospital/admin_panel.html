@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% block page_title %}Administração{% endblock %}
+{% block content %}
+<div class="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-end">
+    <div>
+        <div class="text-sm uppercase tracking-[.25em] text-emerald-300/70">Controle total</div>
+        <h1 class="mt-1 text-3xl font-bold">Painel Administrativo</h1>
+        <p class="mt-2 text-sm text-slate-400">Usuários, cargos, permissões, especialidades, financeiro, produtos, convênios e auditoria.</p>
+    </div>
+    <div class="flex flex-wrap gap-2">
+        <a href="{% url 'user_create' %}" class="rounded-2xl bg-emerald-500 px-5 py-3 text-sm font-bold text-slate-950 hover:bg-emerald-400">Criar usuário</a>
+        <a href="{% url 'module_list' 'cargos' %}" class="btn-soft">Cargos</a>
+        <a href="{% url 'module_list' 'produtos' %}" class="btn-soft">Produtos</a>
+        <a href="{% url 'module_list' 'convenios' %}" class="btn-soft">Convênios</a>
+        <a href="{% url 'module_list' 'configuracoes' %}" class="btn-soft">Configurações</a>
+    </div>
+</div>
+
+<div class="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+    <div class="rounded-[1.5rem] border border-emerald-900/40 bg-[#0f1f18]/80 p-5 shadow-glow"><div class="text-sm text-slate-400">Usuários</div><div class="mt-2 text-3xl font-black">{{ users|length }}</div></div>
+    <div class="rounded-[1.5rem] border border-emerald-900/40 bg-[#0f1f18]/80 p-5 shadow-glow"><div class="text-sm text-slate-400">Especialidades</div><div class="mt-2 text-3xl font-black">{{ specialties|length }}</div></div>
+    <div class="rounded-[1.5rem] border border-emerald-900/40 bg-[#0f1f18]/80 p-5 shadow-glow"><div class="text-sm text-slate-400">Produtos</div><div class="mt-2 text-3xl font-black">{{ products|length }}</div></div>
+    <div class="rounded-[1.5rem] border border-emerald-900/40 bg-[#0f1f18]/80 p-5 shadow-glow"><div class="text-sm text-slate-400">Convênios</div><div class="mt-2 text-3xl font-black">{{ providers|length }}</div></div>
+</div>
+
+<div class="grid gap-6 xl:grid-cols-3">
+    <section class="rounded-[1.5rem] border border-emerald-900/40 bg-[#0f1f18]/80 p-6 shadow-glow xl:col-span-2">
+        <div class="flex items-center justify-between gap-3">
+            <div><h2 class="text-lg font-semibold">Usuários e cargos</h2><p class="text-sm text-slate-400">Nenhum usuário pode se autopromover; alterações geram log.</p></div>
+            <a href="{% url 'user_create' %}" class="btn-soft">Novo usuário</a>
+        </div>
+        <div class="mt-4 overflow-x-auto">
+            <table class="min-w-full text-sm">
+                <thead class="text-left text-xs uppercase text-slate-500"><tr><th class="py-3">Usuário</th><th>Perfil</th><th>Situação</th><th class="text-right">Ações</th></tr></thead>
+                <tbody class="divide-y divide-emerald-900/20">
+                    {% for u in users %}
+                    <tr>
+                        <td class="py-3 font-semibold">{{ u.username }}<div class="text-xs font-normal text-slate-500">{{ u.email|default:'sem e-mail' }}</div></td>
+                        <td>{{ u.profile.get_role_display|default:'-' }}</td>
+                        <td><span class="rounded-full border px-3 py-1 text-xs {% if u.profile.is_active_profile and u.is_active %}border-emerald-500/30 bg-emerald-500/10 text-emerald-300{% else %}border-red-500/30 bg-red-500/10 text-red-300{% endif %}">{% if u.profile.is_active_profile and u.is_active %}Ativo{% else %}Inativo{% endif %}</span></td>
+                        <td class="text-right"><a class="btn-soft" href="{% url 'user_edit' u.pk %}">Editar</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="rounded-[1.5rem] border border-emerald-900/40 bg-[#0f1f18]/80 p-6 shadow-glow">
+        <h2 class="text-lg font-semibold">Especialidades</h2>
+        <div class="mt-4 flex flex-wrap gap-2">
+            {% for sp in specialties %}<span class="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs text-emerald-200">{{ sp.name }}</span>{% endfor %}
+        </div>
+    </section>
+</div>
+
+<div class="mt-6 grid gap-6 xl:grid-cols-2">
+    <section class="rounded-[1.5rem] border border-emerald-900/40 bg-[#0f1f18]/80 p-6 shadow-glow">
+        <h2 class="text-lg font-semibold">Convênios ativos</h2>
+        <div class="mt-4 space-y-3">
+            {% for provider in providers %}
+            <div class="flex items-center justify-between rounded-2xl border border-emerald-900/30 bg-slate-950/40 p-4 text-sm">
+                <div><strong>{{ provider.name }}</strong><div class="text-slate-400">Desconto padrão: {{ provider.default_discount_percent }}%</div></div>
+                <span class="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs text-emerald-300">{{ provider.is_active|yesno:'Ativo,Inativo' }}</span>
+            </div>
+            {% empty %}<div class="text-slate-400">Nenhum convênio cadastrado.</div>{% endfor %}
+        </div>
+    </section>
+    <section class="rounded-[1.5rem] border border-emerald-900/40 bg-[#0f1f18]/80 p-6 shadow-glow">
+        <h2 class="text-lg font-semibold">Últimas alterações de cargos</h2>
+        <div class="mt-4 space-y-3">
+            {% for log in role_logs %}
+            <div class="rounded-2xl border border-emerald-900/30 bg-slate-950/40 p-4 text-sm">
+                <div class="flex justify-between gap-3"><span>{{ log.changed_user }}</span><span class="text-slate-500">{{ log.created_at|date:'d/m/Y H:i' }}</span></div>
+                <div class="text-slate-400">{{ log.previous_role|default:'-' }} → {{ log.new_role }}</div>
+            </div>
+            {% empty %}<div class="text-slate-400">Sem alterações de cargos.</div>{% endfor %}
+        </div>
+    </section>
+</div>
+
+<section class="mt-6 rounded-[1.5rem] border border-emerald-900/40 bg-[#0f1f18]/80 p-6 shadow-glow">
+    <h2 class="text-lg font-semibold">Auditoria recente</h2>
+    <div class="mt-4 space-y-3">
+        {% for log in logs %}
+        <div class="rounded-2xl border border-emerald-900/30 bg-slate-950/40 p-4 text-sm">
+            <div class="flex justify-between"><span>{{ log.action }} - {{ log.module }}</span><span class="text-slate-500">{{ log.created_at|date:'d/m/Y H:i' }}</span></div>
+            <div class="text-slate-400">{{ log.object_label }} {{ log.message }}</div>
+        </div>
+        {% empty %}<div class="text-slate-400">Sem logs.</div>{% endfor %}
+    </div>
+</section>
+{% endblock %}

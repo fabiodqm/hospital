@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block page_title %}{{ module.title }}{% endblock %}
+{% block content %}
+<div class="mx-auto max-w-5xl">
+    <div class="mb-6 flex items-end justify-between gap-4">
+        <div>
+            <div class="text-sm uppercase tracking-[.25em] text-emerald-300/70">{% if mode == 'create' %}Novo registro{% else %}Editar registro{% endif %}</div>
+            <h1 class="mt-1 text-3xl font-bold tracking-tight">{{ module.title }}</h1>
+            <p class="mt-2 text-sm text-slate-400">{{ module.subtitle }}</p>
+        </div>
+        <a href="{% url 'module_list' slug %}" class="btn-soft">Voltar</a>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" class="rounded-[1.5rem] border border-emerald-900/40 bg-[#0f1f18]/80 p-6 shadow-glow">
+        {% csrf_token %}
+        {% if form.non_field_errors %}<div class="mb-5 rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200">{{ form.non_field_errors }}</div>{% endif %}
+        <div class="grid gap-5 md:grid-cols-2">
+            {% for field in form %}
+            <div class="{% if field.field.widget.input_type == 'textarea' or field.name == 'content' or field.name == 'report' or field.name == 'anamnesis' or field.name == 'diagnosis' or field.name == 'conduct' or field.name == 'treatment' or field.name == 'orientations' or field.name == 'notes' or field.name == 'message' %}md:col-span-2{% endif %}">
+                <label class="mb-2 block text-sm font-medium text-slate-300">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}<p class="mt-1 text-xs text-slate-500">{{ field.help_text }}</p>{% endif %}
+                {% for error in field.errors %}<p class="mt-1 text-xs text-red-300">{{ error }}</p>{% endfor %}
+            </div>
+            {% endfor %}
+        </div>
+        <div class="mt-8 flex justify-end gap-3">
+            <a href="{% url 'module_list' slug %}" class="rounded-2xl border border-slate-700 px-5 py-3 text-sm font-semibold text-slate-200 hover:bg-slate-800">Cancelar</a>
+            <button class="rounded-2xl bg-emerald-500 px-6 py-3 text-sm font-bold text-slate-950 hover:bg-emerald-400">Salvar</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

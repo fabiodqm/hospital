@@ -1,0 +1,240 @@
+{% load static %}
+<!doctype html>
+<html lang="pt-br" data-theme="dark">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}{{ hospital_name }}{% endblock %}</title>
+    <link rel="icon" href="data:,">
+    <script>
+      (function () {
+        var savedTheme = localStorage.getItem('hp-theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+      })();
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Sora', 'Manrope', 'Inter', 'ui-sans-serif', 'system-ui'],
+              display: ['Sora', 'Manrope', 'ui-sans-serif', 'system-ui'],
+              serif: ['Fraunces', 'ui-serif', 'Georgia']
+            },
+            colors: {
+              shine: {
+                bg: '#07110d',
+                card: '#0f1f18',
+                soft: '#13281f',
+                line: '#1f3a2d',
+                green: '#0ecf98',
+                mint: '#69f0ae'
+              }
+            },
+            boxShadow: {
+              glow: '0 1px 0 rgba(255,255,255,.08) inset, 0 30px 90px rgba(0,0,0,.42), 0 0 0 1px rgba(14,207,152,.13)',
+              depth: '0 24px 70px rgba(0,0,0,.36), 0 12px 28px rgba(14,207,152,.08), inset 0 1px 0 rgba(255,255,255,.07)'
+            }
+          }
+        }
+      }
+    </script>
+    <link rel="stylesheet" href="{% static 'css/app.css' %}">
+    <script defer src="https://unpkg.com/lucide@latest"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script defer src="{% static 'js/app.js' %}"></script>
+</head>
+<body class="app-body min-h-screen bg-[#07110d] text-slate-100 antialiased">
+    <div class="app-bg fixed inset-0 -z-10"></div>
+
+    {% if user.is_authenticated %}
+    <aside class="sidebar" aria-label="Menu principal do Centro Médico SHINE">
+        <div class="brand-top">
+            <a class="brand-link" href="{% if user.profile.role == 'paciente' %}{% url 'patient_portal' %}{% else %}{% url 'dashboard' %}{% endif %}" aria-label="Ir para o painel">
+                <div class="brand-icon"><i data-lucide="heart-pulse"></i></div>
+                <div class="brand-name"><span>Centro Médico</span><strong>SHINE</strong></div>
+            </a>
+        </div>
+
+        <ul class="menu custom-scroll" aria-label="Módulos do sistema">
+            {% for item in nav_modules %}
+            <li style="--bg:{% cycle '#0ecf98' '#38bdf8' '#a3e635' '#34d399' '#f59e0b' '#fb7185' '#8b5cf6' '#22c55e' %};"
+                class="{% if item.slug == 'dashboard' and request.resolver_match.url_name == 'dashboard' %}active{% elif item.slug == 'portal-paciente' and request.resolver_match.url_name == 'patient_portal' %}active{% elif item.slug == 'arquivados' and request.resolver_match.url_name == 'archive_list' %}active{% elif item.slug == 'relatorios' and request.resolver_match.url_name == 'reports' %}active{% elif item.slug == 'administracao' and request.resolver_match.url_name == 'admin_panel' %}active{% elif slug == item.slug %}active{% endif %}">
+                {% if item.slug == 'dashboard' %}
+                    <a href="{% url 'dashboard' %}">
+                {% elif item.slug == 'portal-paciente' %}
+                    <a href="{% url 'patient_portal' %}">
+                {% elif item.slug == 'arquivados' %}
+                    <a href="{% url 'archive_list' %}">
+                {% elif item.slug == 'relatorios' %}
+                    <a href="{% url 'reports' %}">
+                {% elif item.slug == 'administracao' %}
+                    <a href="{% url 'admin_panel' %}">
+                {% else %}
+                    <a href="{% url 'module_list' item.slug %}">
+                {% endif %}
+                    <span class="item-icon"><i data-lucide="{{ item.icon }}"></i></span>
+                    <span class="item-text">{{ item.label }}</span>
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+    </aside>
+
+    <div class="top-profile">
+        <button type="button" class="avatar-button" data-dropdown-toggle="profileMenu" aria-expanded="false" aria-label="Abrir menu do perfil">
+            <span class="avatar-img">
+                {% if user.profile.profile_photo %}
+                    <img src="{{ user.profile.profile_photo.url }}" alt="Foto do usuário">
+                {% else %}
+                    {{ user.username|slice:":2"|upper }}
+                {% endif %}
+            </span>
+        </button>
+
+        <div id="profileMenu" class="profile-dropdown dropdown-menu hidden">
+            <div class="dropdown-header">
+                <span class="dropdown-header-avatar">
+                    {% if user.profile.profile_photo %}
+                        <img src="{{ user.profile.profile_photo.url }}" alt="Foto do usuário">
+                    {% else %}
+                        {{ user.username|slice:":2"|upper }}
+                    {% endif %}
+                </span>
+                <div class="user-info">
+                    <h3>{% if user.profile.display_name %}{{ user.profile.display_name }}{% else %}{{ user.get_full_name|default:user.username }}{% endif %}</h3>
+                    <p>{{ user.profile.get_role_display|default:"Usuário" }}</p>
+                    {% if user.email %}<small>{{ user.email }}</small>{% endif %}
+                </div>
+            </div>
+
+            <div class="dropdown-line"></div>
+            <div class="dropdown-title">Conta</div>
+
+            <a href="{% url 'profile_account' %}" class="dropdown-link">
+                <i data-lucide="image-plus"></i>
+                <span>Meus dados / alterar foto</span>
+            </a>
+            {% if user.profile.role == 'paciente' %}
+            <a href="{% url 'patient_portal' %}" class="dropdown-link">
+                <i data-lucide="user-round-check"></i>
+                <span>Meu portal do paciente</span>
+            </a>
+            {% if user.profile.linked_patient %}
+            <div class="linked-patient-pill">Paciente vinculado: {{ user.profile.linked_patient.full_name }}</div>
+            {% endif %}
+            {% endif %}
+            <div class="dropdown-line"></div>
+            <div class="dropdown-title">Atalhos</div>
+
+            {% if user.profile.role == 'paciente' %}
+            <a href="{% url 'patient_portal' %}#consultas" class="dropdown-link">
+                <i data-lucide="calendar-days"></i>
+                <span>Minhas consultas</span>
+            </a>
+            <a href="{% url 'patient_portal' %}#exames" class="dropdown-link">
+                <i data-lucide="clipboard-list"></i>
+                <span>Meus exames e laudos</span>
+            </a>
+            <a href="{% url 'patient_portal' %}#documentos" class="dropdown-link">
+                <i data-lucide="file-signature"></i>
+                <span>Minhas receitas e documentos</span>
+            </a>
+            <a href="{% url 'patient_portal' %}#planos" class="dropdown-link">
+                <i data-lucide="shield-check"></i>
+                <span>Meu plano de saúde</span>
+            </a>
+            {% else %}
+            <a href="{% url 'module_list' 'agenda' %}" class="dropdown-link">
+                <i data-lucide="calendar-days"></i>
+                <span>Agenda clínica</span>
+            </a>
+            <a href="{% url 'module_list' 'exames' %}" class="dropdown-link">
+                <i data-lucide="clipboard-list"></i>
+                <span>Exames e laudos</span>
+            </a>
+            <a href="{% url 'module_list' 'documentos' %}" class="dropdown-link">
+                <i data-lucide="file-signature"></i>
+                <span>Receitas e documentos</span>
+            </a>
+            <a href="{% url 'profile_signature' %}" class="dropdown-link">
+                <i data-lucide="pen-line"></i>
+                <span>Minha assinatura médica</span>
+            </a>
+            <a href="{% url 'module_list' 'pacientes' %}" class="dropdown-link">
+                <i data-lucide="users-round"></i>
+                <span>Meus pacientes</span>
+            </a>
+            {% endif %}
+
+            <div class="dropdown-line"></div>
+            <div class="theme-row">
+                <div class="theme-label">
+                    <i data-lucide="contrast"></i>
+                    <span>Aparência</span>
+                </div>
+                <div class="theme-switch segmented-theme">
+                    <button type="button" data-theme-set="dark" title="Modo escuro"><i data-lucide="moon"></i></button>
+                    <button type="button" data-theme-set="light" title="Modo claro"><i data-lucide="sun"></i></button>
+                </div>
+            </div>
+
+            {% if can_open_admin_panel %}
+            <a href="{% url 'admin_panel' %}" class="dropdown-link">
+                <i data-lucide="settings"></i>
+                <span>Configurações</span>
+            </a>
+            {% endif %}
+            <form action="{% url 'logout' %}" method="post">
+                {% csrf_token %}
+                <button class="dropdown-link danger" type="submit">
+                    <i data-lucide="log-out"></i>
+                    <span>Sair</span>
+                </button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    <main class="{% if user.is_authenticated %}shine-main{% endif %}">
+        {% if user.is_authenticated %}
+        <header class="app-header sticky top-0 z-20 border-b border-emerald-900/30 bg-[#07110d]/78 backdrop-blur-xl">
+            <div class="flex h-20 items-center justify-between gap-4 px-5 pr-24 lg:px-8 lg:pr-28">
+                <div class="min-w-0">
+                    <div class="page-kicker text-xs uppercase tracking-[.25em] text-emerald-300/70">Centro Médico SHINE</div>
+                    <div class="truncate font-display text-xl font-extrabold tracking-tight">{% block page_title %}{{ hospital_name }}{% endblock %}</div>
+                </div>
+
+                {% if user.profile.role == 'paciente' %}
+                <a href="{% url 'patient_portal' %}" class="patient-header-pill hidden md:inline-flex">
+                    <i data-lucide="shield-check"></i>
+                    <span>Portal seguro do paciente</span>
+                </a>
+                {% else %}
+                <form action="{% url 'module_list' 'pacientes' %}" method="get" class="hidden md:block">
+                    <div class="relative">
+                        <i data-lucide="search" class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500"></i>
+                        <input name="q" class="search-input w-80 rounded-2xl border border-emerald-900/50 bg-slate-950/70 py-3 pl-10 pr-4 text-sm outline-none transition placeholder:text-slate-500 focus:border-emerald-400" placeholder="Buscar registro, consulta, exame...">
+                    </div>
+                </form>
+                {% endif %}
+            </div>
+        </header>
+        {% endif %}
+
+        <section class="content-wrap px-5 py-6 lg:px-8">
+            {% if messages %}
+            <div class="mb-5 space-y-3">
+                {% for message in messages %}
+                <div class="message-card rounded-2xl border border-emerald-900/40 bg-slate-950/80 px-5 py-4 text-sm shadow-glow {% if message.tags == 'error' %}border-red-500/30 text-red-200{% else %}text-emerald-100{% endif %}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% block content %}{% endblock %}
+        </section>
+    </main>
+</body>
+</html>

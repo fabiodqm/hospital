@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block page_title %}Biblioteca de modelos de exames{% endblock %}
+{% block content %}
+<div class="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-end">
+  <div>
+    <div class="text-sm uppercase tracking-[.25em] text-emerald-300/70">Exames médicos</div>
+    <h1 class="mt-1 text-3xl font-black tracking-tight">Biblioteca de modelos realistas</h1>
+    <p class="mt-2 max-w-3xl text-sm text-slate-400">Selecione um modelo para gerar um laudo editável. O médico pode alterar qualquer campo antes de assinar.</p>
+  </div>
+  <a href="{% url 'module_list' 'exames' %}" class="btn-soft">Voltar aos exames</a>
+</div>
+
+<div class="space-y-8">
+  {% for category, templates in categories.items %}
+  <section>
+    <h2 class="mb-4 text-xl font-black text-emerald-200">{{ category }}</h2>
+    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      {% for template in templates %}
+      <article class="rounded-[1.5rem] border border-emerald-900/40 bg-[#0f1f18]/85 p-5 shadow-glow transition hover:-translate-y-1 hover:border-emerald-400/50">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <h3 class="font-black text-slate-50">{{ template.name }}</h3>
+            <p class="mt-1 text-xs uppercase tracking-[.18em] text-emerald-300/70">{{ template.exam_type }}</p>
+          </div>
+          <i data-lucide="clipboard-list" class="h-6 w-6 text-emerald-300"></i>
+        </div>
+        <p class="mt-3 line-clamp-3 text-sm text-slate-400">{{ template.clinical_indication|default:'Modelo pronto para uso hospitalar.' }}</p>
+        <div class="mt-4 rounded-2xl bg-slate-950/70 p-3 text-xs text-slate-300"><strong>Material:</strong> {{ template.sample_material|default:'Conforme protocolo' }}</div>
+        <div class="mt-5 flex justify-end gap-2">
+          <a href="{% url 'module_create' 'exames' %}?modelo={{ template.pk }}" class="rounded-2xl bg-emerald-500 px-4 py-2 text-sm font-bold text-slate-950 hover:bg-emerald-400">Usar modelo</a>
+          <a href="{% url 'module_edit' 'modelos-exames' template.pk %}" class="btn-soft">Editar base</a>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+  </section>
+  {% empty %}
+  <div class="rounded-[1.5rem] border border-dashed border-emerald-900/50 p-10 text-center text-slate-400">Nenhum modelo encontrado. Rode o START.bat para executar o seed inicial.</div>
+  {% endfor %}
+</div>
+{% endblock %}

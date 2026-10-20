@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% block page_title %}{{ module.title }}{% endblock %}
+{% block content %}
+<div class="mx-auto max-w-7xl">
+    <div class="mb-6 flex flex-col justify-between gap-4 xl:flex-row xl:items-end">
+        <div>
+            <div class="text-sm uppercase tracking-[.25em] text-emerald-300/70">{% if mode == 'create' %}Novo exame{% else %}Editar exame{% endif %}</div>
+            <h1 class="mt-1 text-3xl font-black tracking-tight">Documento de exame médico</h1>
+            <p class="mt-2 max-w-3xl text-sm text-slate-400">Escolha um modelo pronto, edite o laudo conforme o caso e assine com sua assinatura cadastrada no perfil.</p>
+        </div>
+        <div class="flex flex-wrap gap-3">
+            <a href="{% url 'exam_template_library' %}" class="btn-soft">Biblioteca de modelos</a>
+            {% if object %}<a href="{% url 'exam_print' object.pk %}" target="_blank" class="rounded-2xl bg-emerald-500 px-5 py-3 text-sm font-bold text-slate-950 hover:bg-emerald-400">Abrir documento</a>{% endif %}
+            <a href="{% url 'module_list' slug %}" class="btn-soft">Voltar</a>
+        </div>
+    </div>
+
+    <div class="grid gap-6 xl:grid-cols-[1.05fr_.95fr]">
+        <form method="post" enctype="multipart/form-data" class="rounded-[1.7rem] border border-emerald-900/40 bg-[#0f1f18]/88 p-6 shadow-glow">
+            {% csrf_token %}
+            {% if form.non_field_errors %}<div class="mb-5 rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200">{{ form.non_field_errors }}</div>{% endif %}
+            <div class="grid gap-5 md:grid-cols-2">
+                {% for field in form %}
+                <div class="{% if field.field.widget.input_type == 'textarea' or field.name == 'report' or field.name == 'findings' or field.name == 'conclusion' or field.name == 'recommendations' or field.name == 'clinical_indication' %}md:col-span-2{% endif %}">
+                    {% if field.name == 'sign_now' %}
+                        <label class="flex items-center gap-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/8 p-4 text-sm font-semibold text-emerald-100">
+                            {{ field }} <span>{{ field.label }}</span>
+                        </label>
+                        {% if not doctor_signature %}<p class="mt-2 text-xs text-amber-300">Você ainda não cadastrou assinatura. Use o menu do perfil antes de assinar.</p>{% endif %}
+                    {% else %}
+                        <label class="mb-2 block text-sm font-semibold text-slate-300">{{ field.label }}</label>
+                        {{ field }}
+                    {% endif %}
+                    {% if field.help_text %}<p class="mt-1 text-xs text-slate-500">{{ field.help_text }}</p>{% endif %}
+                    {% for error in field.errors %}<p class="mt-1 text-xs text-red-300">{{ error }}</p>{% endfor %}
+                </div>
+                {% endfor %}
+            </div>
+            <div class="mt-8 flex justify-end gap-3">
+                <a href="{% url 'module_list' slug %}" class="rounded-2xl border border-slate-700 px-5 py-3 text-sm font-semibold text-slate-200 hover:bg-slate-800">Cancelar</a>
+                <button class="rounded-2xl bg-emerald-500 px-6 py-3 text-sm font-bold text-slate-950 hover:bg-emerald-400">Salvar exame</button>
+            </div>
+        </form>
+
+        <aside class="sticky top-24 h-fit rounded-[1.7rem] border border-emerald-900/40 bg-slate-950/75 p-5 shadow-depth">
+            <div class="mb-4 flex items-center justify-between gap-3">
+                <div>
+                    <div class="text-xs uppercase tracking-[.22em] text-emerald-300/70">Prévia</div>
+                    <h2 class="text-xl font-black text-slate-50">Laudo editável</h2>
+                </div>
+                <i data-lucide="file-check-2" class="h-7 w-7 text-emerald-300"></i>
+            </div>
+            <div class="rounded-[1.4rem] border border-slate-700/70 bg-white p-6 font-serif text-slate-950 shadow-2xl">
+                <div class="border-b border-slate-300 pb-4 text-center">
+                    <div class="text-lg font-black tracking-wide">CENTRO MÉDICO SHINE</div>
+                    <div class="mt-1 text-xs text-slate-500">Documento médico de exame • Uso interno e entrega ao paciente</div>
+                </div>
+                <div class="mt-5 grid gap-2 text-xs">
+                    <div><strong>Exame:</strong> <span id="previewExam">Selecione um modelo ou preencha o tipo</span></div>
+                    <div><strong>Material:</strong> <span id="previewSample">Conforme protocolo</span></div>
+                    <div><strong>Indicação:</strong> <span id="previewIndication">Avaliação clínica</span></div>
+                </div>
+                <div class="my-5 h-px bg-slate-200"></div>
+                <pre id="previewReport" class="min-h-[220px] whitespace-pre-wrap text-[11px] leading-relaxed text-slate-800">O conteúdo do laudo aparecerá aqui para conferência.</pre>
+                <div class="mt-5 rounded-xl bg-slate-100 p-3 text-xs">
+                    <strong>Conclusão:</strong>
+                    <div id="previewConclusion" class="mt-1 whitespace-pre-wrap">Preencha a conclusão diagnóstica.</div>
+                </div>
+                <div class="mt-8 text-center">
+                    {% if doctor_signature %}<img src="{{ doctor_signature.url }}" alt="Assinatura cadastrada" class="mx-auto mb-1 max-h-16 max-w-[220px] object-contain">{% endif %}
+                    <div class="mx-auto mb-1 h-px w-56 bg-slate-500"></div>
+                    <div class="text-xs font-bold">Assinatura do profissional responsável</div>
+                </div>
+            </div>
+        </aside>
+    </div>
+</div>
+
+<script>
+const EXAM_TEMPLATES = {{ template_payload_json|safe }};
+const templateSelect = document.getElementById('id_template');
+const examType = document.getElementById('id_exam_type');
+const indication = document.getElementById('id_clinical_indication');
+const sample = document.getElementById('id_sample_material');
+const report = document.getElementById('id_report');
+const conclusion = document.getElementById('id_conclusion');
+const recommendations = document.getElementById('id_recommendations');
+function setIfEmptyOrConfirm(el, value) {
+  if (!el || !value) return;
+  if (!el.value.trim() || confirm('Aplicar este modelo e substituir o texto atual deste campo?')) el.value = value;
+}
+function fillFromTemplate() {
+  const data = EXAM_TEMPLATES[templateSelect?.value];
+  if (!data) return updatePreview();
+  setIfEmptyOrConfirm(examType, data.exam_type);
+  setIfEmptyOrConfirm(indication, data.clinical_indication);
+  setIfEmptyOrConfirm(sample, data.sample_material);
+  setIfEmptyOrConfirm(report, data.report);
+  setIfEmptyOrConfirm(conclusion, data.conclusion);
+  setIfEmptyOrConfirm(recommendations, data.recommendations);
+  updatePreview();
+}
+function updatePreview() {
+  document.getElementById('previewExam').textContent = examType?.value || 'Selecione um modelo ou preencha o tipo';
+  document.getElementById('previewSample').textContent = sample?.value || 'Conforme protocolo';
+  document.getElementById('previewIndication').textContent = indication?.value || 'Avaliação clínica';
+  document.getElementById('previewReport').textContent = report?.value || 'O conteúdo do laudo aparecerá aqui para conferência.';
+  document.getElementById('previewConclusion').textContent = conclusion?.value || 'Preencha a conclusão diagnóstica.';
+}
+templateSelect?.addEventListener('change', fillFromTemplate);
+[examType, indication, sample, report, conclusion].forEach(el => el?.addEventListener('input', updatePreview));
+updatePreview();
+</script>
+{% endblock %}

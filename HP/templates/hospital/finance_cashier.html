@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block page_title %}Financeiro e Caixa{% endblock %}
+{% block content %}
+<style>
+  .finance-shell{display:grid;grid-template-columns:minmax(0,1.5fr) 420px;gap:22px;align-items:start}.finance-panel{border:1px solid rgba(14,207,152,.22);background:linear-gradient(145deg,rgba(15,31,24,.92),rgba(6,13,20,.94));border-radius:28px;box-shadow:0 26px 80px rgba(0,0,0,.34),inset 0 1px 0 rgba(255,255,255,.06)}.product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px}.product-card{border:1px solid rgba(31,58,45,.8);background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.015));border-radius:24px;overflow:hidden;transition:.2s ease}.product-card:hover{transform:translateY(-3px);border-color:rgba(14,207,152,.55);box-shadow:0 18px 42px rgba(14,207,152,.12)}.product-img{height:132px;background:rgba(2,6,23,.7);display:grid;place-items:center}.qty-btn{height:36px;width:36px;border-radius:12px;background:rgba(14,207,152,.14);color:#6dfac0;font-weight:900}.qty-input{height:36px;width:56px;border-radius:12px;border:1px solid rgba(14,207,152,.25);background:#06101a;text-align:center;color:#fff}.receipt-card{position:sticky;top:98px}.summary-line{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px dashed rgba(148,163,184,.2)}.benefit-pill{border:1px solid rgba(14,207,152,.25);background:rgba(14,207,152,.1);border-radius:18px;padding:12px 14px}.recent-table th,.recent-table td{padding:14px 16px;border-bottom:1px solid rgba(31,58,45,.45)}@media(max-width:1100px){.finance-shell{grid-template-columns:1fr}.receipt-card{position:relative;top:auto}}
+
+  html[data-theme="dark"] .finance-panel{background:linear-gradient(145deg,rgba(15,31,24,.94),rgba(6,13,20,.96));color:#eafff8;border-color:rgba(14,207,152,.24)}
+  html[data-theme="dark"] .product-card{background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.018));color:#eafff8;border-color:rgba(31,58,45,.8)}
+  html[data-theme="dark"] .product-img{background:#06101a}html[data-theme="dark"] .qty-input{background:#06101a;color:#fff;border-color:rgba(14,207,152,.25)}
+  html[data-theme="light"] .finance-panel{background:#ffffff;color:#0c1f17;border-color:rgba(5,95,70,.22);box-shadow:0 18px 46px rgba(15,23,42,.09),inset 0 1px 0 rgba(255,255,255,.95)}
+  html[data-theme="light"] .product-card{background:#f8fcfa;color:#0c1f17;border-color:rgba(5,95,70,.20);box-shadow:0 12px 30px rgba(15,23,42,.06)}
+  html[data-theme="light"] .product-card:hover{border-color:rgba(5,95,70,.36);box-shadow:0 18px 42px rgba(15,23,42,.09)}
+  html[data-theme="light"] .product-img{background:#edf7f2}html[data-theme="light"] .qty-input{background:#fff;color:#0c1f17;border-color:rgba(5,95,70,.30)}
+  html[data-theme="light"] .qty-btn{background:#e4f6ed;color:#065f46}html[data-theme="light"] .benefit-pill{background:#e8f8ef;border-color:rgba(5,95,70,.22);color:#0c1f17}
+  html[data-theme="light"] .summary-line{border-bottom-color:rgba(5,95,70,.18)}html[data-theme="light"] .recent-table th,html[data-theme="light"] .recent-table td{border-color:rgba(5,95,70,.18)}
+
+</style>
+
+<div class="mb-7 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+  <div>
+    <div class="text-sm uppercase tracking-[.25em] text-emerald-300/70">Caixa hospitalar</div>
+    <h1 class="mt-1 text-3xl font-black tracking-tight">Financeiro e vendas</h1>
+    <p class="mt-2 max-w-3xl text-sm text-slate-400">Os produtos cadastrados aparecem aqui para venda. O desconto é aplicado automaticamente quando o paciente possui plano ativo ou convênio empresarial ativo.</p>
+  </div>
+  <div class="flex gap-3">
+    <a href="{% url 'module_list' 'produtos' %}" class="btn-soft">Gerenciar produtos</a>
+    <a href="{% url 'module_list' 'convenios' %}" class="btn-soft">Empresas / convênios</a>
+    <a href="{% url 'module_list' 'planos-saude' %}" class="btn-soft">Planos</a>
+  </div>
+</div>
+
+<form method="post" id="saleForm" class="finance-shell">
+  {% csrf_token %}
+  <section class="space-y-5">
+    <div class="finance-panel p-5 md:p-6">
+      <div class="grid gap-4 lg:grid-cols-2">
+        <div>
+          <label class="mb-2 block text-sm font-bold text-slate-300">Paciente</label>
+          <select name="patient" id="patientSelect" class="w-full rounded-2xl border border-emerald-900/50 bg-slate-950/80 px-4 py-3 text-sm text-slate-100 outline-none focus:border-emerald-400">
+            <option value="">Venda sem paciente vinculado</option>
+            {% for patient in patients %}<option value="{{ patient.pk }}">{{ patient.full_name }}</option>{% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="mb-2 block text-sm font-bold text-slate-300">Operador</label>
+          <div class="rounded-2xl border border-emerald-900/50 bg-slate-950/80 px-4 py-3 text-sm text-slate-200">{{ user.profile.display_name|default:user.username }}</div>
+        </div>
+      </div>
+      <div class="mt-4 grid gap-3 md:grid-cols-3">
+        <div class="benefit-pill"><div class="text-xs text-slate-400">Plano de saúde ativo</div><strong id="planBenefit" class="text-emerald-300">0%</strong></div>
+        <div class="benefit-pill"><div class="text-xs text-slate-400">Convênio empresarial</div><strong id="companyBenefit" class="text-emerald-300">0%</strong></div>
+        <div class="benefit-pill"><div class="text-xs text-slate-400">Desconto automático total</div><strong id="totalBenefit" class="text-emerald-300">0%</strong></div>
+      </div>
+      <p id="discountSource" class="mt-3 rounded-2xl bg-slate-950/50 px-4 py-3 text-xs text-slate-400">Selecione um paciente para verificar descontos ativos.</p>
+    </div>
+
+    <div class="finance-panel p-5 md:p-6">
+      <div class="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h2 class="text-xl font-black">Produtos e serviços cadastrados</h2>
+          <p class="mt-1 text-sm text-slate-400">Use + e - para montar o recibo. Produtos sem permissão de desconto não entram no cálculo do benefício.</p>
+        </div>
+        <input id="productSearch" type="search" placeholder="Buscar produto..." class="rounded-2xl border border-emerald-900/50 bg-slate-950/70 px-4 py-3 text-sm outline-none placeholder:text-slate-500 focus:border-emerald-400">
+      </div>
+      <div class="product-grid" id="productGrid">
+        {% for product in products %}
+        <article class="product-card" data-name="{{ product.name|lower }} {{ product.category|lower }}" data-price="{{ product.price }}" data-discount="{% if product.discount_allowed %}1{% else %}0{% endif %}">
+          <div class="product-img">
+            {% if product.image %}<img src="{{ product.image.url }}" alt="{{ product.name }}" class="h-full w-full object-cover">{% else %}<i data-lucide="package-plus" class="h-11 w-11 text-emerald-300"></i>{% endif %}
+          </div>
+          <div class="p-4">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <h3 class="font-extrabold text-slate-50">{{ product.name }}</h3>
+                <p class="mt-1 text-xs uppercase tracking-[.18em] text-emerald-300/70">{{ product.category }}</p>
+              </div>
+              <span class="rounded-full border border-emerald-500/25 bg-emerald-500/10 px-3 py-1 text-xs text-emerald-200">R$ {{ product.price }}</span>
+            </div>
+            <p class="mt-3 min-h-[40px] text-sm text-slate-400">{{ product.description|default:'Produto ou serviço cadastrado para venda.'|truncatechars:90 }}</p>
+            <div class="mt-4 flex items-center justify-between gap-3">
+              <div class="text-xs text-slate-500">Estoque: <strong class="text-slate-200">{% if product.stock %}{{ product.stock }}{% else %}Serviço{% endif %}</strong></div>
+              <div class="flex items-center gap-2">
+                <button type="button" class="qty-btn" data-qty-minus="qty_{{ product.pk }}">−</button>
+                <input class="qty-input" id="qty_{{ product.pk }}" name="qty_{{ product.pk }}" value="0" min="0" {% if product.stock %}max="{{ product.stock }}"{% endif %} inputmode="numeric">
+                <button type="button" class="qty-btn" data-qty-plus="qty_{{ product.pk }}">+</button>
+              </div>
+            </div>
+            {% if not product.discount_allowed %}<div class="mt-3 text-xs text-amber-300">Este item não recebe desconto.</div>{% endif %}
+          </div>
+        </article>
+        {% empty %}
+        <div class="rounded-3xl border border-dashed border-emerald-900/50 p-10 text-center text-slate-400 md:col-span-2">Nenhum produto ativo. Cadastre em “Gerenciar produtos”.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <aside class="receipt-card space-y-5">
+    <div class="finance-panel p-6">
+      <div class="mb-5 text-center">
+        <div class="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-2xl bg-emerald-500/12 text-emerald-300"><i data-lucide="receipt-text"></i></div>
+        <h2 class="text-2xl font-black">Recibo SHINE</h2>
+        <p class="text-sm text-slate-400">Prévia automática</p>
+      </div>
+      <div class="rounded-2xl border border-emerald-900/40 bg-slate-950/60 p-4">
+        <div id="cartItems" class="min-h-[120px] space-y-2 text-sm text-slate-300"><p class="text-center text-slate-500">Adicione produtos para ver o recibo.</p></div>
+      </div>
+      <div class="mt-5">
+        <div class="summary-line"><span class="text-slate-400">Subtotal</span><strong id="subtotalText">R$ 0,00</strong></div>
+        <div class="summary-line"><span class="text-slate-400">Desconto automático</span><strong id="discountText" class="text-emerald-300">R$ 0,00</strong></div>
+        <div class="flex items-center justify-between pt-5"><span class="text-lg font-black">TOTAL</span><strong id="totalText" class="text-2xl text-emerald-300">R$ 0,00</strong></div>
+      </div>
+      <button class="mt-6 w-full rounded-2xl bg-emerald-500 px-5 py-4 font-black text-slate-950 shadow-lg shadow-emerald-950/40 hover:bg-emerald-400" type="submit">Finalizar venda e gerar recibo</button>
+      <p class="mt-3 text-center text-xs text-slate-500">O comprovante é gerado para download. Não existe upload de comprovante.</p>
+    </div>
+
+    <div class="finance-panel overflow-hidden">
+      <div class="border-b border-emerald-900/30 p-5">
+        <h3 class="font-black">Últimas vendas</h3>
+      </div>
+      <div class="max-h-[420px] overflow-auto">
+        <table class="recent-table w-full text-left text-sm">
+          <tbody>
+          {% for sale in recent_sales %}
+            <tr>
+              <td><strong>#{{ sale.pk }}</strong><br><span class="text-xs text-slate-500">{{ sale.patient|default:'Sem paciente' }}</span></td>
+              <td class="text-right"><strong class="text-emerald-300">R$ {{ sale.total }}</strong><br><a class="text-xs text-slate-400 hover:text-emerald-300" href="{% url 'sale_receipt_download' sale.pk %}">Baixar recibo</a></td>
+            </tr>
+          {% empty %}
+            <tr><td class="p-5 text-slate-500">Nenhuma venda registrada.</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </aside>
+</form>
+
+<script>
+const patientDiscounts = {{ discount_map_json|safe }};
+const moneyFmt = new Intl.NumberFormat('pt-BR', {style:'currency', currency:'BRL'});
+function parseMoney(v){ return Number(String(v||'0').replace(',', '.')) || 0; }
+function getDiscountInfo(){ const id = document.getElementById('patientSelect').value; return patientDiscounts[id] || {total_percent:'0', plan_percent:'0', company_percent:'0', source:'Sem desconto ativo'}; }
+function recalc(){
+  const info = getDiscountInfo();
+  const percent = parseMoney(info.total_percent);
+  document.getElementById('planBenefit').textContent = `${info.plan_percent || 0}%`;
+  document.getElementById('companyBenefit').textContent = `${info.company_percent || 0}%`;
+  document.getElementById('totalBenefit').textContent = `${percent}%`;
+  document.getElementById('discountSource').textContent = info.source || 'Sem desconto ativo';
+  let subtotal=0, discountable=0, rows=[];
+  document.querySelectorAll('.product-card').forEach(card=>{
+    const input = card.querySelector('.qty-input');
+    const qty = parseInt(input.value || '0', 10) || 0;
+    const price = parseMoney(card.dataset.price);
+    const name = card.querySelector('h3').textContent.trim();
+    if(qty>0){ const line=qty*price; subtotal+=line; if(card.dataset.discount==='1') discountable+=line; rows.push(`<div class="flex justify-between gap-3"><span>${qty}x ${name}</span><strong>${moneyFmt.format(line)}</strong></div>`); }
+  });
+  const discount = discountable * percent / 100;
+  const total = Math.max(subtotal - discount, 0);
+  document.getElementById('cartItems').innerHTML = rows.length ? rows.join('') : '<p class="text-center text-slate-500">Adicione produtos para ver o recibo.</p>';
+  document.getElementById('subtotalText').textContent = moneyFmt.format(subtotal);
+  document.getElementById('discountText').textContent = moneyFmt.format(discount);
+  document.getElementById('totalText').textContent = moneyFmt.format(total);
+}
+document.querySelectorAll('[data-qty-plus]').forEach(btn=>btn.addEventListener('click',()=>{const i=document.getElementById(btn.dataset.qtyPlus); const max=parseInt(i.max||'9999',10); i.value=Math.min((parseInt(i.value||'0',10)||0)+1,max); recalc();}));
+document.querySelectorAll('[data-qty-minus]').forEach(btn=>btn.addEventListener('click',()=>{const i=document.getElementById(btn.dataset.qtyMinus); i.value=Math.max((parseInt(i.value||'0',10)||0)-1,0); recalc();}));
+document.querySelectorAll('.qty-input').forEach(i=>i.addEventListener('input', recalc));
+document.getElementById('patientSelect').addEventListener('change', recalc);
+document.getElementById('productSearch').addEventListener('input', e=>{const q=e.target.value.toLowerCase(); document.querySelectorAll('.product-card').forEach(card=>card.style.display = card.dataset.name.includes(q) ? '' : 'none');});
+recalc();
+</script>
+{% endblock %}

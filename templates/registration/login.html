@@ -1,0 +1,916 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Entrar - {{ hospital_name }}</title>
+    <link rel="icon" href="data:,">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <script defer src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            color-scheme: light;
+            --primary: #0dcc96;
+            --primary-light: #34e3b0;
+            --primary-dark: #09a578;
+
+            --bg: #eefcf7;
+            --surface: #ffffff;
+            --paper: #ffffff;
+
+            --text: #0f172a;
+            --muted: #64748b;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            margin: 0;
+            overflow-x: hidden;
+            background:
+                radial-gradient(circle at top left, rgba(13, 204, 150, .18), transparent 28rem),
+                radial-gradient(circle at bottom right, rgba(13, 204, 150, .14), transparent 24rem),
+                linear-gradient(145deg, #f6fffb 0%, #e8fff7 45%, #ffffff 100%);
+            color: #0f172a;
+            font-family: "Plus Jakarta Sans", "Manrope", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+
+        body::before,
+        body::after {
+            content: "";
+            position: fixed;
+            pointer-events: none;
+        }
+
+        body::before {
+            inset: 0;
+            background:
+                linear-gradient(90deg, rgba(255, 255, 255, .06) 1px, transparent 1px),
+                linear-gradient(180deg, rgba(255, 255, 255, .05) 1px, transparent 1px);
+            background-size: 72px 72px;
+            mask-image: linear-gradient(180deg, rgba(0, 0, 0, .5), transparent 70%);
+        }
+
+        body::after {
+            width: 34rem;
+            height: 34rem;
+            right: -12rem;
+            bottom: -12rem;
+            border-radius: 999px;
+            background: radial-gradient(circle, rgba(6, 182, 212, .32), transparent 66%);
+            filter: blur(4px);
+        }
+
+        .login-page {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            display: grid;
+            align-content: center;
+            gap: clamp(1rem, 3vw, 1.5rem);
+            padding: clamp(1rem, 3vw, 2rem);
+        }
+
+        .brand-bar {
+            width: min(68rem, 100%);
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .brand-mark {
+            display: flex;
+            align-items: center;
+            min-width: 0;
+            gap: .85rem;
+        }
+
+        .brand-icon {
+            display: grid;
+            width: 3rem;
+            height: 3rem;
+            place-items: center;
+            flex: 0 0 auto;
+            border-radius: 1rem;
+            border: 1px solid rgba(34, 211, 238, .36);
+            background: rgba(2, 44, 54, .68);
+            color: #a5f3fc;
+            box-shadow: 0 16px 50px rgba(8, 145, 178, .22);
+        }
+
+        .brand-copy {
+            min-width: 0;
+        }
+
+        .brand-copy span {
+            display: block;
+            color: #67e8f9;
+            font-size: .76rem;
+            font-weight: 800;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+
+        .brand-copy strong {
+            display: block;
+            overflow: hidden;
+            color: #fff;
+            font-size: clamp(1.05rem, 2vw, 1.25rem);
+            font-weight: 900;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .status-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: .55rem;
+            min-height: 2.55rem;
+            padding: 0 .95rem;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, .16);
+            background: rgba(2, 6, 23, .52);
+            color: #dffbff;
+            font-size: .84rem;
+            font-weight: 800;
+            backdrop-filter: blur(14px);
+        }
+
+        .status-chip::before {
+            content: "";
+            width: .62rem;
+            height: .62rem;
+            border-radius: 999px;
+            background: #22c55e;
+            box-shadow: 0 0 16px rgba(34, 197, 94, .9);
+        }
+
+        .stage {
+            width: min(68rem, 100%);
+            margin: 0 auto;
+            perspective: 1400px;
+        }
+
+        .auth-card {
+            --rx: 0deg;
+            --ry: 0deg;
+            --mx: 50%;
+            --my: 50%;
+            position: relative;
+            min-height: 35rem;
+            overflow: hidden;
+            border-radius: 1.85rem;
+            background: var(--paper);
+            color: #0f172a;
+            box-shadow: 0 36px 110px rgba(2, 6, 23, .34), 0 0 0 1px rgba(255, 255, 255, .7);
+            transform: rotateX(var(--rx)) rotateY(var(--ry));
+            transform-style: preserve-3d;
+            transition: transform .12s ease, box-shadow .24s ease;
+        }
+
+        .auth-card::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: 3;
+            pointer-events: none;
+            background: radial-gradient(circle at var(--mx) var(--my), rgba(255, 255, 255, .42), transparent 22rem);
+            opacity: .68;
+            mix-blend-mode: soft-light;
+        }
+
+        .auth-card::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            border-radius: inherit;
+            box-shadow: inset 0 0 0 1px rgba(15, 23, 42, .08);
+        }
+
+        .form-grid {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            min-height: inherit;
+            grid-template-columns: 1fr 1fr;
+            background:
+                linear-gradient(90deg, rgba(255, 255, 255, .95), rgba(255, 255, 255, .88)),
+                radial-gradient(circle at 12% 0%, rgba(14, 165, 233, .12), transparent 20rem);
+        }
+
+        .form-pane {
+            display: flex;
+            min-width: 0;
+            flex-direction: column;
+            justify-content: center;
+            padding: clamp(2rem, 5vw, 4.4rem);
+            transition: opacity .3s ease, transform .55s ease;
+        }
+
+        .register-pane {
+            opacity: 0;
+            transform: translateX(1.5rem);
+            pointer-events: none;
+        }
+
+        .auth-card.is-register .login-pane {
+            opacity: 0;
+            transform: translateX(-1.5rem);
+            pointer-events: none;
+        }
+
+        .auth-card.is-register .register-pane {
+            opacity: 1;
+            transform: translateX(0);
+            pointer-events: auto;
+        }
+
+        .form-title {
+            margin: 0;
+            color: #0f172a;
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: 950;
+            line-height: 1;
+            letter-spacing: 0;
+        }
+
+        .form-text {
+            margin: .75rem 0 1.75rem;
+            max-width: 21rem;
+            color: #64748b;
+            font-size: .98rem;
+            font-weight: 650;
+            line-height: 1.6;
+        }
+
+        .field {
+            position: relative;
+            margin-top: 1rem;
+        }
+
+        .field label {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            z-index: 1;
+            transform: translateY(-50%);
+            color: #64748b;
+            font-size: .92rem;
+            font-weight: 750;
+            pointer-events: none;
+            transition: transform .18s ease, color .18s ease, font-size .18s ease;
+        }
+
+        .field input {
+            width: 100%;
+            height: 3.35rem;
+            border: 0;
+            border-radius: .78rem;
+            background: #f1f5f9;
+            color: #0f172a;
+            padding: 1.2rem 3.2rem .4rem 1rem;
+            font-size: 1rem;
+            font-weight: 800;
+            box-shadow: inset 0 0 0 1px rgba(15, 23, 42, .05), 0 8px 24px rgba(15, 23, 42, .04);
+            transition: background .18s ease, box-shadow .18s ease, transform .18s ease;
+        }
+
+        .field input:focus {
+            outline: none;
+            background: #fff;
+            box-shadow: inset 0 0 0 2px rgba(13, 204, 150, .55), 0 12px 32px rgba(13, 204, 150, .12);
+            transform: translateY(-1px);
+        }
+
+        .field input:focus + label,
+        .field input:not(:placeholder-shown) + label {
+            color: #0891b2;
+            font-size: .7rem;
+            transform: translateY(-1.22rem);
+        }
+
+        .field-icon,
+        .password-toggle {
+            position: absolute;
+            right: .85rem;
+            top: 50%;
+            z-index: 2;
+            transform: translateY(-50%);
+            color: #0f172a;
+        }
+
+        .field-icon svg,
+        .password-toggle svg {
+            width: 1.1rem;
+            height: 1.1rem;
+        }
+
+        .password-toggle {
+            display: inline-grid;
+            width: 2rem;
+            height: 2rem;
+            place-items: center;
+            border: 0;
+            border-radius: .65rem;
+            background: transparent;
+            cursor: pointer;
+            transition: background .18s ease, color .18s ease;
+        }
+
+        .password-toggle:hover {
+            background: rgba(14, 165, 233, .1);
+            color: #0891b2;
+        }
+
+        .primary-button,
+        .ghost-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .55rem;
+            min-height: 3.2rem;
+            border-radius: 999px;
+            font-weight: 900;
+            cursor: pointer;
+            transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+        }
+
+        .primary-button {
+            width: 100%;
+            margin-top: 1.2rem;
+            border: 0;
+            background: linear-gradient(135deg, #089c74, #0dcc96);
+            color: #fff;
+            box-shadow: 0 18px 34px rgba(13, 204, 150, .28);
+        }
+
+        .primary-button:hover,
+        .ghost-button:hover {
+            transform: translateY(-2px);
+        }
+
+        .primary-button:focus-visible,
+        .ghost-button:focus-visible,
+        .password-toggle:focus-visible {
+            outline: 3px solid rgba(6, 182, 212, .34);
+            outline-offset: 3px;
+        }
+
+        .error-message,
+        .success-message {
+            border-radius: 1rem;
+            padding: .85rem 1rem;
+            font-size: .9rem;
+            font-weight: 800;
+            line-height: 1.45;
+        }
+
+        .error-message {
+            margin-bottom: 1rem;
+            border: 1px solid rgba(239, 68, 68, .28);
+            background: rgba(254, 226, 226, .9);
+            color: #991b1b;
+        }
+
+        .success-message {
+            display: none;
+            margin-top: 1rem;
+            border: 1px solid rgba(34, 197, 94, .28);
+            background: rgba(220, 252, 231, .92);
+            color: #14532d;
+        }
+
+        .success-message.is-visible {
+            display: block;
+            animation: pop .24s ease both;
+        }
+
+        @keyframes pop {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .mini-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: .75rem;
+            margin-top: 1rem;
+            color: #64748b;
+            font-size: .84rem;
+            font-weight: 750;
+        }
+
+        .mini-row label {
+            display: inline-flex;
+            align-items: center;
+            gap: .45rem;
+            cursor: pointer;
+        }
+
+        .mini-row input {
+            width: 1rem;
+            height: 1rem;
+            accent-color: #0891b2;
+        }
+
+        .helper-link {
+            border: 0;
+            background: none;
+            color: #0aa574;
+            font-weight: 900;
+            cursor: pointer;
+        }
+
+        .quick-roles {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: .65rem;
+            margin-top: 1.2rem;
+        }
+
+        .role-button {
+            display: grid;
+            min-height: 3rem;
+            place-items: center;
+            border: 1px solid rgba(15, 23, 42, .12);
+            border-radius: .85rem;
+            background: #fff;
+            color: #0f172a;
+            cursor: pointer;
+            transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+        }
+
+        .role-button:hover,
+        .role-button.is-active {
+            border-color: rgba(6, 182, 212, .48);
+            box-shadow: 0 12px 28px rgba(8, 145, 178, .12);
+            transform: translateY(-2px);
+        }
+
+        .role-button svg {
+            width: 1.25rem;
+            height: 1.25rem;
+        }
+
+        .switch-panel {
+            position: absolute;
+            top: 0;
+            right: 0;
+            z-index: 4;
+            display: grid;
+            width: 50%;
+            height: 100%;
+            place-items: center;
+            overflow: hidden;
+            border-radius: 8rem 1.85rem 1.85rem 8rem;
+            background:
+                radial-gradient(circle at var(--mx) var(--my), rgba(255,255,255,.12), transparent 18rem),
+                linear-gradient(135deg, #06785a, #0aa574 55%, #0dcc96);
+            color: #ecfeff;
+            box-shadow: -18px 0 60px rgba(8, 47, 73, .22), inset 0 0 0 1px rgba(255, 255, 255, .12);
+            transform: translateX(0);
+            transition: transform .65s cubic-bezier(.2, .8, .2, 1), border-radius .65s cubic-bezier(.2, .8, .2, 1);
+        }
+
+        .switch-panel::before {
+            content: "";
+            position: absolute;
+            inset: 1.2rem;
+            border-radius: inherit;
+            border: 1px solid rgba(255, 255, 255, .12);
+            opacity: .55;
+            pointer-events: none;
+        }
+
+        .switch-panel::after {
+            content: "";
+            position: absolute;
+            width: 18rem;
+            height: 18rem;
+            right: -7rem;
+            bottom: -7rem;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, .08);
+        }
+
+        .auth-card.is-register .switch-panel {
+            border-radius: 1.85rem 8rem 8rem 1.85rem;
+            transform: translateX(-100%);
+            box-shadow: 18px 0 60px rgba(8, 47, 73, .22), inset 0 0 0 1px rgba(255, 255, 255, .12);
+        }
+
+        .panel-copy {
+            position: relative;
+            z-index: 1;
+            max-width: 20rem;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .panel-copy h2 {
+            margin: 0;
+            color: #fff;
+            font-size: clamp(2rem, 4vw, 3.1rem);
+            font-weight: 950;
+            line-height: 1.03;
+            text-shadow: 0 8px 24px rgba(0, 0, 0, .26);
+        }
+
+        .panel-copy p {
+            margin: .85rem auto 1.4rem;
+            color: rgba(236, 254, 255, .86);
+            font-size: .96rem;
+            font-weight: 750;
+            line-height: 1.55;
+        }
+
+        .ghost-button {
+            min-width: 9.4rem;
+            border: 2px solid rgba(255, 255, 255, .86);
+            background: rgba(255, 255, 255, .06);
+            color: #fff;
+            padding: 0 1.35rem;
+            box-shadow: 0 14px 34px rgba(0, 0, 0, .16);
+            backdrop-filter: blur(10px);
+        }
+
+        .panel-state {
+            display: none;
+        }
+
+        .panel-state.is-active {
+            display: block;
+            animation: fadeSlide .34s ease both;
+        }
+
+        @keyframes fadeSlide {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 860px) {
+            body {
+                background:
+                    radial-gradient(circle at 80% 12%, rgba(34, 211, 238, .22), transparent 19rem),
+                    linear-gradient(160deg, #020617 0%, #06202a 48%, #d7f6ff 49%, #c8eef9 100%);
+            }
+
+            .brand-bar {
+                align-items: stretch;
+                flex-direction: column;
+            }
+
+            .status-chip {
+                justify-content: center;
+            }
+
+            .auth-card {
+                min-height: 0;
+                border-radius: 1.35rem;
+                transform: none;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-pane {
+                min-height: 31rem;
+                padding: clamp(1.5rem, 7vw, 2.4rem);
+            }
+
+            .login-pane {
+                display: flex;
+            }
+
+            .register-pane {
+                display: none;
+                opacity: 1;
+                transform: none;
+                pointer-events: auto;
+            }
+
+            .auth-card.is-register .login-pane {
+                display: none;
+            }
+
+            .auth-card.is-register .register-pane {
+                display: flex;
+            }
+
+            .switch-panel,
+            .auth-card.is-register .switch-panel {
+                position: relative;
+                width: 100%;
+                min-height: 17rem;
+                border-radius: 0 0 1.35rem 1.35rem;
+                transform: none;
+                box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .12);
+            }
+
+            .quick-roles {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 520px) {
+            .login-page {
+                padding: .85rem;
+            }
+
+            .brand-icon {
+                width: 2.7rem;
+                height: 2.7rem;
+                border-radius: .85rem;
+            }
+
+            .form-title {
+                font-size: 2.15rem;
+            }
+
+            .mini-row {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: .001ms !important;
+                animation-iteration-count: 1 !important;
+                scroll-behavior: auto !important;
+                transition-duration: .001ms !important;
+            }
+        }
+
+        .discord-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .55rem;
+            width: 100%;
+            min-height: 3.25rem;
+            margin-top: .8rem;
+            border: 1px solid rgba(15, 23, 42, .14);
+            border-radius: 1rem;
+            background: #111827;
+            color: #fff;
+            font-weight: 900;
+            text-decoration: none;
+            transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
+        }
+        .discord-button span {
+            color: #94a3b8;
+            font-size: .75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+        }
+        .discord-button:hover {
+            transform: translateY(-1px);
+            background: #0f172a;
+            box-shadow: 0 18px 40px rgba(15, 23, 42, .18);
+        }
+    </style>
+</head>
+<body>
+    <main class="login-page">
+        <header class="brand-bar" aria-label="Cabecalho do login">
+            <div class="brand-mark">
+                <div class="brand-icon" aria-hidden="true">
+                    <i data-lucide="cross"></i>
+                </div>
+                <div class="brand-copy">
+                    <span style="color:#047857">Sistema Hospitalar</span>
+                    <strong style="color:#0f172a">{{ hospital_name }}</strong>
+                </div>
+            </div>
+            <div class="status-chip">Acesso seguro</div>
+        </header>
+
+        <section class="stage" aria-label="Entrada e cadastro">
+            <div class="auth-card" id="authCard">
+                <div class="form-grid">
+                    <form method="post" class="form-pane login-pane" autocomplete="on" data-auth-form="login">
+                        {% csrf_token %}
+                        <h1 class="form-title">Entrar</h1>
+                        <p class="form-text">Entre para continuar no painel do {{ hospital_name }}.</p>
+                        {% if form.errors %}
+                        <div class="error-message">Usuário ou senha inválidos.</div>
+                        {% endif %}
+                        <div class="field">
+                            <input id="login-username" name="username" autocomplete="username" placeholder=" " autofocus required>
+                            <label for="login-username">Usuário</label>
+                            <span class="field-icon" aria-hidden="true"><i data-lucide="user"></i></span>
+                        </div>
+                        <div class="field">
+                            <input id="login-password" name="password" type="password" autocomplete="current-password" placeholder=" " required>
+                            <label for="login-password">Senha</label>
+                            <button class="password-toggle" type="button" data-toggle-password="login-password" aria-label="Mostrar senha">
+                                <i data-lucide="eye"></i>
+                            </button>
+                        </div>
+                        {% if next %}
+                        <input type="hidden" name="next" value="{{ next }}">
+                        {% endif %}
+                        <div class="mini-row">
+                            <label>
+                                <input type="checkbox" name="remember">
+                                Manter acesso
+                            </label>
+                            <button class="helper-link" type="button" data-mode-target="register">Solicitar acesso</button>
+                        </div>
+                        <button class="primary-button" type="submit">
+                            <i data-lucide="log-in"></i>
+                            Entrar
+                        </button>
+                        <a class="discord-button" href="{% url 'discord_login_start' %}">
+                            <i data-lucide="message-circle"></i>
+                            Entrar com Discord <span>em breve</span>
+                        </a>
+
+                    </form>
+
+                    <form class="form-pane register-pane" autocomplete="on" data-auth-form="register">
+                        <h1 class="form-title">Cadastro</h1>
+                        <p class="form-text">Preencha os dados para preparar uma solicitação ao administrador.</p>
+                        <div class="field">
+                            <input id="register-name" autocomplete="name" placeholder=" " required>
+                            <label for="register-name">Nome completo</label>
+                            <span class="field-icon" aria-hidden="true"><i data-lucide="user-round"></i></span>
+                        </div>
+                        <div class="field">
+                            <input id="register-email" type="email" autocomplete="email" placeholder=" " required>
+                            <label for="register-email">E-mail</label>
+                            <span class="field-icon" aria-hidden="true"><i data-lucide="mail"></i></span>
+                        </div>
+                        <div class="field">
+                            <input id="register-password" type="password" autocomplete="new-password" placeholder=" " required>
+                            <label for="register-password">Senha desejada</label>
+                            <button class="password-toggle" type="button" data-toggle-password="register-password" aria-label="Mostrar senha">
+                                <i data-lucide="eye"></i>
+                            </button>
+                        </div>
+                        <div class="quick-roles" aria-label="Tipo de acesso">
+                            <button class="role-button is-active" type="button" data-role="Administrativo" aria-label="Administrativo">
+                                <i data-lucide="briefcase-medical"></i>
+                            </button>
+                            <button class="role-button" type="button" data-role="Médico" aria-label="Médico">
+                                <i data-lucide="stethoscope"></i>
+                            </button>
+                            <button class="role-button" type="button" data-role="Suporte" aria-label="Suporte">
+                                <i data-lucide="headphones"></i>
+                            </button>
+                        </div>
+                        <button class="primary-button" type="submit">
+                            <i data-lucide="send"></i>
+                            Solicitar cadastro
+                        </button>
+                        <div class="success-message" id="requestMessage" role="status">
+                            Solicitação preparada. Um administrador precisa criar ou liberar o usuário no painel.
+                        </div>
+                    </form>
+                </div>
+
+                <aside class="switch-panel" aria-label="Alternar login e cadastro">
+                    <div class="panel-copy">
+                        <div class="panel-state is-active" data-panel-state="login">
+                            <h2>Novo<br>acesso?</h2>
+                            <p>Solicite o cadastro para entrar no ambiente hospitalar.</p>
+                            <button class="ghost-button" type="button" data-mode-target="register">
+                                <i data-lucide="user-plus"></i>
+                                Cadastro
+                            </button>
+                        </div>
+                        <div class="panel-state" data-panel-state="register">
+                            <h2>Já tem<br>conta?</h2>
+                            <p>Volte para o login e acesse seu painel.</p>
+                            <button class="ghost-button" type="button" data-mode-target="login">
+                                <i data-lucide="log-in"></i>
+                                Entrar
+                            </button>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const authCard = document.getElementById('authCard');
+        const panelStates = document.querySelectorAll('[data-panel-state]');
+        const registerForm = document.querySelector('[data-auth-form="register"]');
+        const requestMessage = document.getElementById('requestMessage');
+        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        function setMode(mode) {
+            const isRegister = mode === 'register';
+            authCard.classList.toggle('is-register', isRegister);
+            requestMessage.classList.remove('is-visible');
+
+            panelStates.forEach((state) => {
+                state.classList.toggle('is-active', state.dataset.panelState === mode);
+            });
+
+            document.querySelectorAll('[data-auth-form]').forEach((form) => {
+                const isActive = form.dataset.authForm === mode;
+                form.setAttribute('aria-hidden', String(!isActive));
+                form.querySelectorAll('input, button').forEach((field) => {
+                    if (field.type !== 'hidden') {
+                        field.tabIndex = isActive ? 0 : -1;
+                    }
+                });
+            });
+
+            const focusTarget = document.getElementById(isRegister ? 'register-name' : 'login-username');
+            window.setTimeout(() => focusTarget.focus(), 240);
+        }
+
+        document.querySelectorAll('[data-mode-target]').forEach((button) => {
+            button.addEventListener('click', () => setMode(button.dataset.modeTarget));
+        });
+
+        document.querySelectorAll('[data-toggle-password]').forEach((button) => {
+            button.addEventListener('click', () => {
+                const input = document.getElementById(button.dataset.togglePassword);
+                const shouldShow = input.type === 'password';
+                input.type = shouldShow ? 'text' : 'password';
+                button.setAttribute('aria-label', shouldShow ? 'Ocultar senha' : 'Mostrar senha');
+                button.innerHTML = shouldShow ? '<i data-lucide="eye-off"></i>' : '<i data-lucide="eye"></i>';
+                refreshIcons();
+            });
+        });
+
+        document.querySelectorAll('.role-button').forEach((button) => {
+            button.addEventListener('click', () => {
+                document.querySelectorAll('.role-button').forEach((item) => item.classList.remove('is-active'));
+                button.classList.add('is-active');
+            });
+        });
+
+        registerForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            if (!registerForm.reportValidity()) {
+                return;
+            }
+            requestMessage.classList.add('is-visible');
+        });
+
+        if (!reducedMotion) {
+            authCard.addEventListener('pointermove', (event) => {
+                const rect = authCard.getBoundingClientRect();
+                const x = event.clientX - rect.left;
+                const y = event.clientY - rect.top;
+                const px = x / rect.width;
+                const py = y / rect.height;
+
+                authCard.style.setProperty('--mx', `${px * 100}%`);
+                authCard.style.setProperty('--my', `${py * 100}%`);
+                authCard.style.setProperty('--ry', `${(px - .5) * 3.5}deg`);
+                authCard.style.setProperty('--rx', `${(.5 - py) * 3.5}deg`);
+            });
+
+            authCard.addEventListener('pointerleave', () => {
+                authCard.style.setProperty('--mx', '50%');
+                authCard.style.setProperty('--my', '50%');
+                authCard.style.setProperty('--rx', '0deg');
+                authCard.style.setProperty('--ry', '0deg');
+            });
+        }
+
+        setMode('login');
+
+        function refreshIcons() {
+            if (window.lucide) {
+                lucide.createIcons();
+            }
+        }
+
+        window.addEventListener('load', refreshIcons);
+    </script>
+</body>
+</html>

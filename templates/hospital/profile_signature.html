@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block page_title %}Assinatura médica{% endblock %}
+{% block content %}
+<div class="mx-auto max-w-5xl">
+  <div class="mb-6">
+    <div class="text-sm uppercase tracking-[.25em] text-emerald-300/70">Perfil profissional</div>
+    <h1 class="mt-1 text-3xl font-black tracking-tight">Minha assinatura médica</h1>
+    <p class="mt-2 max-w-3xl text-sm text-slate-400">Cadastre sua assinatura digitalizada para assinar exames, laudos, prescrições e documentos médicos.</p>
+  </div>
+
+  <div class="grid gap-6 lg:grid-cols-[1fr_.9fr]">
+    <form method="post" enctype="multipart/form-data" class="rounded-[1.7rem] border border-emerald-900/40 bg-[#0f1f18]/88 p-6 shadow-glow">
+      {% csrf_token %}
+      <div class="space-y-5">
+        {% for field in form %}
+        <div>
+          <label class="mb-2 block text-sm font-semibold text-slate-300">{{ field.label }}</label>
+          {{ field }}
+          {% if field.help_text %}<p class="mt-1 text-xs text-slate-500">{{ field.help_text }}</p>{% endif %}
+          {% for error in field.errors %}<p class="mt-1 text-xs text-red-300">{{ error }}</p>{% endfor %}
+        </div>
+        {% endfor %}
+      </div>
+      <div class="mt-8 flex justify-end gap-3">
+        <a href="{% url 'dashboard' %}" class="btn-soft">Cancelar</a>
+        <button class="rounded-2xl bg-emerald-500 px-6 py-3 text-sm font-bold text-slate-950 hover:bg-emerald-400">Salvar assinatura</button>
+      </div>
+    </form>
+
+    <aside class="rounded-[1.7rem] border border-emerald-900/40 bg-slate-950/75 p-6 shadow-depth">
+      <div class="text-xs uppercase tracking-[.22em] text-emerald-300/70">Prévia</div>
+      <h2 class="mt-1 text-xl font-black text-slate-50">Como aparecerá nos documentos</h2>
+      <div class="mt-6 rounded-[1.4rem] bg-white p-6 text-center text-slate-950">
+        {% if profile.signature_image %}
+          <img src="{{ profile.signature_image.url }}" alt="Assinatura cadastrada" class="mx-auto mb-3 max-h-24 max-w-[280px] object-contain">
+        {% else %}
+          <div class="mx-auto mb-4 grid h-24 w-64 place-items-center rounded-2xl border border-dashed border-slate-300 text-sm text-slate-400">Assinatura ainda não cadastrada</div>
+        {% endif %}
+        <div class="mx-auto mb-2 h-px w-72 bg-slate-500"></div>
+        <div class="font-bold">{{ user.get_full_name|default:user.username }}</div>
+        <div class="text-sm text-slate-500">{{ profile.professional_license|default:'CRM/Registro profissional' }}</div>
+      </div>
+      <div class="mt-5 rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4 text-sm text-amber-100">
+        Use imagem nítida e sem fundo colorido. Essa assinatura será usada apenas em documentos emitidos por usuários autorizados.
+      </div>
+    </aside>
+  </div>
+</div>
+{% endblock %}

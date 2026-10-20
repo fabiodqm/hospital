@@ -1,0 +1,106 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Centro Médico SHINE</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+  <script defer src="https://unpkg.com/lucide@latest"></script>
+  <script defer src="{% static 'js/app.js' %}"></script>
+</head>
+<body class="shine-landing-body">
+  <main class="landing-page">
+    <header class="landing-container landing-header">
+      <a href="#home" class="landing-logo" aria-label="Centro Médico SHINE">
+        <div class="landing-logo-mark" aria-hidden="true"><span></span><span></span><span></span></div>
+        <div class="landing-logo-text"><small>Centro Médico</small><strong>SHINE</strong></div>
+      </a>
+
+      <div class="landing-nav-area">
+        <nav class="landing-nav" aria-label="Menu principal">
+          <a href="#home" class="active" data-section-link="home">Início</a>
+          <a href="#sobre" data-section-link="sobre">Sobre nós</a>
+        </nav>
+        {% if user.is_authenticated %}
+          <a class="landing-login-btn" href="{% url 'dashboard' %}"><i data-lucide="layout-dashboard"></i>Abrir painel</a>
+        {% else %}
+          <a class="landing-login-btn" href="{% url 'login' %}"><i data-lucide="user-round"></i>Entrar</a>
+        {% endif %}
+      </div>
+    </header>
+
+    <section id="home" class="landing-container landing-hero">
+      <div class="landing-hero-content">
+        <div class="landing-purpose"><i data-lucide="heart-pulse"></i>Cuidar de você. Esse é o nosso propósito.</div>
+        <h1>Excelência em saúde, <span>todos os dias.</span></h1>
+        <p>Atendimento humanizado, tecnologia de ponta e uma equipe dedicada para o seu bem-estar em cada etapa da vida.</p>
+
+        <div class="landing-features">
+          <article class="landing-feature-card"><i data-lucide="users-round"></i><strong>Atendimento Humanizado</strong></article>
+          <article class="landing-feature-card"><i data-lucide="activity"></i><strong>Excelência Médica</strong></article>
+          <article class="landing-feature-card"><i data-lucide="shield-check"></i><strong>Segurança e Qualidade</strong></article>
+          <article class="landing-feature-card"><i data-lucide="clock-3"></i><strong>Agilidade no Atendimento</strong></article>
+        </div>
+      </div>
+
+      <div class="landing-hero-visual" aria-hidden="true">
+        <div class="landing-circle-shell"></div>
+        <div class="landing-image-mask"><img src="{% static 'img/equipe-medica-shine.png' %}" alt="Equipe médica do Centro Médico SHINE"></div>
+        <div class="landing-dots"></div><div class="landing-dots bottom"></div><div class="landing-floating-ring"></div><div class="landing-tiny-plus">+</div>
+      </div>
+    </section>
+
+    <section id="sobre" class="shine-about-section" aria-label="Sobre o Centro Médico SHINE">
+      <div class="shine-about-ambient" aria-hidden="true"><div class="orb a"></div><div class="orb b"></div><div class="grid"></div></div>
+      <div class="shine-about-container">
+        <div class="shine-about-header">
+          <div>
+            <div class="shine-about-pill"><span></span>Sobre nós · Capítulo I</div>
+            <h2>Saúde que <em>brilha</em>.<br>Cuidado que <em>acolhe</em>.</h2>
+          </div>
+          <p>Bem-vindo ao Centro Médico SHINE — um lugar onde a medicina deixa de ser protocolo e volta a ser presença. Role para conhecer a nossa história em quatro capítulos.</p>
+        </div>
+
+        <div class="shine-about-grid">
+          <div class="shine-about-left">
+            <div class="shine-sticky-orb">
+              <div class="shine-orb">
+                <div class="halo"></div><div class="planet"></div><div class="orbit"><span></span></div><div class="ufo"><span></span></div>
+                <i style="--x:10%;--y:20%"></i><i style="--x:85%;--y:15%"></i><i style="--x:78%;--y:88%"></i><i style="--x:12%;--y:78%"></i><i style="--x:50%;--y:5%"></i><i style="--x:95%;--y:55%"></i><i style="--x:4%;--y:50%"></i>
+              </div>
+              <div class="shine-coordinates">
+                <div>Coordenadas</div>
+                <strong>ET's City · 23.4°N / 47.1°W</strong>
+                <span></span>
+                <p>Um pequeno satélite, uma órbita constante, uma luz que não se apaga. Assim cuidamos.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="shine-chapters">
+            <article class="shine-chapter reveal-on-scroll"><div class="line"></div><div class="node"></div><div class="meta"><span>01</span><b></b><small>Origem</small></div><h3>Nascemos em 2023.</h3><p>Logo após os ETs assumirem o comando e decidirem elevar o nível da saúde por aqui, o SHINE surgiu com uma missão bem clara: iluminar o cuidado médico na nossa cidade.</p></article>
+            <article class="shine-chapter reveal-on-scroll"><div class="line"></div><div class="node"></div><div class="meta"><span>02</span><b></b><small>Território</small></div><h3>Moramos na ET's City.</h3><p>E é por isso que sabemos, na pele, que cuidar da saúde vai muito além de assinar uma receita. Conhecemos o ritmo, as ruas e a gente daqui.</p></article>
+            <article class="shine-chapter reveal-on-scroll"><div class="line"></div><div class="node"></div><div class="meta"><span>03</span><b></b><small>Método</small></div><h3>Tecnologia com afeto.</h3><p>Combinamos equipamentos avançados com atendimento humanizado, leve e sem aquela frieza típica de hospital. Cada pessoa é recebida com atenção real.</p></article>
+            <article class="shine-chapter reveal-on-scroll"><div class="line"></div><div class="node"></div><div class="meta"><span>04</span><b></b><small>Promessa</small></div><h3>Cuidamos com o carinho do universo.</h3><p>No SHINE você encontra tecnologia avançada, acolhimento real e uma atmosfera cheia de esperança. Estamos prontos para cuidar de você e da sua família.</p></article>
+
+            <blockquote class="shine-about-quote reveal-on-scroll"><div>Promessa</div><p>“Estamos prontos para cuidar de você e da sua família. Com todo o carinho do <em>universo</em>.”</p><span>Equipe SHINE</span></blockquote>
+          </div>
+        </div>
+
+        <div class="shine-stat-ribbon reveal-on-scroll">
+          <div><strong>2023</strong><span>Fundação</span></div>
+          <div><strong>100%</strong><span>Humanizado</span></div>
+          <div><strong>24/7</strong><span>Cuidado contínuo</span></div>
+          <div><strong>∞</strong><span>Carinho do universo</span></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <a href="#home" class="landing-back-top" aria-label="Voltar ao início" title="Voltar ao início">
+    <i data-lucide="arrow-up"></i>
+  </a>
+</body>
+</html>

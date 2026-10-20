@@ -1,0 +1,18 @@
+Centro Médico SHINE
+
+Decisoes de projeto:
+- Django com templates HTML para manter simplicidade e controle.
+- Tailwind via CDN para desenvolvimento rapido, com CSS proprio para a identidade dark/green.
+- Supabase como PostgreSQL via DATABASE_URL.
+- Supabase API client opcional para select/insert/update/delete.
+- Permissoes em 3 camadas: perfil, especialidade, módulo.
+- Estudante deve trabalhar em fluxo supervisionado.
+- Histórico e auditoria incluidos como regra global.
+
+Para producao:
+- Trocar SECRET_KEY.
+- Desativar DEBUG.
+- Configurar ALLOWED_HOSTS.
+- Configurar storage para arquivos.
+- Testar fluxos medicos reais.
+- Criar politicas de backup.

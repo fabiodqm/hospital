@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% block page_title %}Mensagens Rápidas{% endblock %}
+{% block content %}
+<style>
+  .qm-panel{border:1px solid rgba(14,207,152,.28);background:linear-gradient(145deg,rgba(255,255,255,.94),rgba(236,255,249,.92));color:#07110d;border-radius:18px;box-shadow:0 28px 90px rgba(14,207,152,.12),0 14px 36px rgba(15,23,42,.12);overflow:hidden}.qm-header{background:linear-gradient(135deg,#0bb77f,#0ecf98);color:#fff;padding:18px 22px}.qm-body{padding:22px}.qm-label{display:block;font-size:13px;font-weight:900;color:#102a22;margin-bottom:8px}.qm-input{width:100%;border:1px solid #d9e8e3;background:#f8fbfa;border-radius:10px;padding:12px 14px;font-size:14px;color:#07110d;outline:none}.qm-input:focus{border-color:#0ecf98;box-shadow:0 0 0 4px rgba(14,207,152,.14)}.emoji-btn{height:32px;min-width:32px;border:1px solid #d9e8e3;background:#f5faf8;border-radius:8px;display:inline-grid;place-items:center;margin:3px;font-size:18px;transition:.15s}.emoji-btn:hover,.emoji-btn.selected{background:#dffbf3;border-color:#0ecf98;transform:translateY(-1px)}.qm-saved{border:1px solid rgba(14,207,152,.18);background:rgba(255,255,255,.9);border-radius:18px;box-shadow:0 18px 45px rgba(15,23,42,.08)}.saved-row{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#f7fbfa;border-radius:14px;padding:14px 16px}.saved-text{color:#0f172a;font-size:14px}.copy-btn{border:1px solid #d9e8e3;background:white;border-radius:10px;padding:9px 14px;font-weight:800;color:#0f172a}.delete-btn{background:#ff4048;color:white;border-radius:10px;padding:10px 14px;font-weight:900}.fav-btn{border:1px solid #facc15;background:#fef9c3;color:#854d0e;border-radius:10px;padding:9px 12px;font-weight:900}.category-pill{display:inline-flex;align-items:center;border-radius:999px;background:#dffbf3;color:#08795b;padding:4px 10px;font-size:11px;font-weight:900;margin-right:8px}.dark .qm-panel{background:linear-gradient(145deg,rgba(15,31,24,.96),rgba(2,6,23,.96));color:#eafff8}.dark .qm-label{color:#d9fff3}.dark .qm-input{background:#06101a;border-color:#174533;color:#f8fffc}.dark .qm-saved{background:rgba(15,31,24,.92);border-color:rgba(14,207,152,.22)}.dark .saved-row{background:rgba(2,6,23,.62)}.dark .saved-text{color:#e8fff8}.dark .copy-btn{background:#07110d;color:#e8fff8;border-color:#174533}
+
+  html[data-theme="dark"] .qm-panel{background:linear-gradient(145deg,rgba(15,31,24,.96),rgba(2,6,23,.96));color:#eafff8;border-color:rgba(14,207,152,.28)}html[data-theme="dark"] .qm-label{color:#d9fff3}html[data-theme="dark"] .qm-input{background:#06101a;border-color:#174533;color:#f8fffc}html[data-theme="dark"] .qm-saved{background:rgba(15,31,24,.92);border-color:rgba(14,207,152,.22);color:#eafff8}html[data-theme="dark"] .saved-row{background:rgba(2,6,23,.62);color:#eafff8}html[data-theme="dark"] .saved-text{color:#e8fff8}html[data-theme="dark"] .copy-btn{background:#07110d;color:#e8fff8;border-color:#174533}html[data-theme="dark"] .emoji-btn{background:#07110d;border-color:#174533}html[data-theme="dark"] .emoji-btn:hover,html[data-theme="dark"] .emoji-btn.selected{background:#0f3a2a;border-color:#0ecf98}
+  html[data-theme="light"] .qm-panel{background:linear-gradient(145deg,rgba(255,255,255,.96),rgba(236,255,249,.92));color:#07110d;border-color:rgba(5,95,70,.20)}html[data-theme="light"] .qm-label{color:#102a22}html[data-theme="light"] .qm-input{background:#fff;border-color:rgba(5,95,70,.20);color:#07110d}html[data-theme="light"] .qm-saved{background:#fff;border-color:rgba(5,95,70,.18);color:#07110d}html[data-theme="light"] .saved-row{background:#f7fbfa;color:#07110d}html[data-theme="light"] .saved-text{color:#0f172a}html[data-theme="light"] .copy-btn{background:#fff;color:#0f172a;border-color:rgba(5,95,70,.18)}html[data-theme="light"] .emoji-btn{background:#f5faf8;border-color:rgba(5,95,70,.18)}html[data-theme="light"] .emoji-btn:hover,html[data-theme="light"] .emoji-btn.selected{background:#dffbf3;border-color:#0ecf98}
+
+</style>
+
+<div class="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-end">
+  <div>
+    <div class="text-sm uppercase tracking-[.25em] text-emerald-300/70">Uso individual do médico</div>
+    <h1 class="mt-1 text-3xl font-black tracking-tight">Criador de Mensagens Rápidas</h1>
+    <p class="mt-2 max-w-3xl text-sm text-slate-400">Monte e salve cartões de mensagem para copiar rapidamente. Cada médico ou usuário vê apenas os próprios cartões.</p>
+  </div>
+</div>
+
+<section class="qm-panel mb-7">
+  <div class="qm-header">
+    <h2 class="text-2xl font-black">Criador de Mensagens Rápidas</h2>
+    <p class="mt-1 text-sm text-white/90">Monte e salve cartões de mensagem para uso rápido.</p>
+  </div>
+  <form method="post" class="qm-body" id="quickMessageForm">
+    {% csrf_token %}
+    <input type="hidden" name="initial_emojis" id="initialEmojis">
+    <input type="hidden" name="final_emojis" id="finalEmojis">
+    <div class="mb-5">
+      <label class="qm-label">Mensagem</label>
+      <input class="qm-input" name="message" id="messageInput" placeholder="Ex: Atendimento Finalizado - Obrigado pela confiança em nosso Hospital!" required>
+    </div>
+    <div class="grid gap-5 lg:grid-cols-3">
+      <div>
+        <label class="qm-label">Prefixo</label>
+        <select class="qm-input" name="prefix" id="prefixSelect">
+          <option>Centro Médico SHINE</option>
+          <option>Dr(a). {{ user.profile.display_name|default:user.username }}</option>
+          <option>Equipe Médica SHINE</option>
+          <option>Emergência SHINE</option>
+        </select>
+      </div>
+      <div>
+        <label class="qm-label">Categoria</label>
+        <select class="qm-input" name="category">
+          {% for value,label in categories %}<option value="{{ value }}">{{ label }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="flex items-end gap-3">
+        <label class="inline-flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-black text-emerald-800"><input type="checkbox" name="is_favorite" class="h-4 w-4"> Favoritar</label>
+      </div>
+    </div>
+
+    <div class="mt-5 grid gap-5 lg:grid-cols-2">
+      <div>
+        <label class="qm-label">Emojis Iniciais</label>
+        <input class="qm-input mb-2" id="initialPreview" placeholder="Ex: ✅ 🚑" readonly>
+        <div data-emoji-target="initial">
+          {% for emoji in emoji_options %}<button class="emoji-btn" type="button" data-emoji="{{ emoji }}">{{ emoji }}</button>{% endfor %}
+        </div>
+      </div>
+      <div>
+        <label class="qm-label">Emojis Finais</label>
+        <input class="qm-input mb-2" id="finalPreview" placeholder="Ex: 💉 ❤️" readonly>
+        <div data-emoji-target="final">
+          {% for emoji in emoji_options %}<button class="emoji-btn" type="button" data-emoji="{{ emoji }}">{{ emoji }}</button>{% endfor %}
+        </div>
+      </div>
+    </div>
+    <div class="mt-6 flex justify-end">
+      <button class="rounded-xl bg-[#0866c9] px-6 py-3 font-black text-white shadow-lg shadow-blue-900/20 hover:bg-[#0759ad]" type="submit">Adicionar como cartão</button>
+    </div>
+  </form>
+</section>
+
+<section class="qm-saved p-6">
+  <h2 class="text-2xl font-black text-slate-950 dark:text-slate-50">Meus cartões salvos</h2>
+  <p class="mt-1 text-sm text-slate-500">Clique em “Copiar” para usar uma mensagem ou “Apagar” para removê-la.</p>
+  <div class="mt-6 space-y-3">
+    {% for item in items %}
+    <article class="saved-row">
+      <div class="min-w-0 saved-text">
+        <span class="category-pill">{{ item.category }}</span>
+        <span class="message-copy-text">{% if item.prefix %}[{{ item.prefix }}] {% endif %}{{ item.initial_emojis }} {{ item.message }} {{ item.final_emojis }}</span>
+        <div class="mt-1 text-xs text-slate-500">Criado em {{ item.created_at|date:"d/m/Y H:i" }}{% if item.is_favorite %} · Favorito{% endif %}</div>
+      </div>
+      <div class="flex shrink-0 gap-2">
+        <form method="post">{% csrf_token %}<input type="hidden" name="action" value="favorite"><input type="hidden" name="message_id" value="{{ item.pk }}"><button class="fav-btn" title="Favoritar" type="submit">★</button></form>
+        <button class="copy-btn" type="button" data-copy-card>Copiar</button>
+        <form method="post" onsubmit="return confirm('Apagar este cartão?')">{% csrf_token %}<input type="hidden" name="action" value="delete"><input type="hidden" name="message_id" value="{{ item.pk }}"><button class="delete-btn" type="submit">Apagar</button></form>
+      </div>
+    </article>
+    {% empty %}
+    <div class="rounded-2xl border border-dashed border-emerald-300/40 p-10 text-center text-slate-500">Nenhum cartão salvo ainda. Crie o primeiro acima.</div>
+    {% endfor %}
+  </div>
+</section>
+
+<script>
+const selected = {initial: [], final: []};
+function syncEmoji(){
+  document.getElementById('initialPreview').value = selected.initial.join(' ');
+  document.getElementById('finalPreview').value = selected.final.join(' ');
+  document.getElementById('initialEmojis').value = selected.initial.join(' ');
+  document.getElementById('finalEmojis').value = selected.final.join(' ');
+}
+document.querySelectorAll('[data-emoji-target] .emoji-btn').forEach(btn=>btn.addEventListener('click',()=>{
+  const target = btn.parentElement.dataset.emojiTarget;
+  const emoji = btn.dataset.emoji;
+  if(selected[target].includes(emoji)){ selected[target] = selected[target].filter(e=>e!==emoji); btn.classList.remove('selected'); }
+  else { selected[target].push(emoji); btn.classList.add('selected'); }
+  syncEmoji();
+}));
+document.querySelectorAll('[data-copy-card]').forEach(btn=>btn.addEventListener('click', async ()=>{
+  const text = btn.closest('.saved-row').querySelector('.message-copy-text').textContent.trim().replace(/\s+/g,' ');
+  await navigator.clipboard.writeText(text);
+  const old = btn.textContent; btn.textContent='Copiado!'; setTimeout(()=>btn.textContent=old,1200);
+}));
+</script>
+{% endblock %}

@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+{% block page_title %}Área do Paciente{% endblock %}
+{% block content %}
+{% if not patient %}
+<div class="patient-empty-state">
+    <div class="patient-empty-icon"><i data-lucide="user-x"></i></div>
+    <div>
+        <h1>Paciente não vinculado</h1>
+        <p>Sua conta ainda não possui um cadastro de paciente vinculado. Solicite ao administrador ou à recepção para liberar seu portal.</p>
+    </div>
+</div>
+{% else %}
+<div class="patient-portal">
+    <section class="patient-hero">
+        <div>
+            <div class="text-sm uppercase tracking-[.25em] text-emerald-300/70">Portal seguro do paciente</div>
+            <h1>{{ patient.full_name }}</h1>
+            <p>Acompanhe suas consultas, exames liberados, documentos, plano de saúde, histórico autorizado e procedimentos sem acessar áreas internas do hospital.</p>
+        </div>
+        <div class="patient-hero-badge">
+            <i data-lucide="shield-check"></i>
+            <span>Acesso restrito</span>
+        </div>
+    </section>
+
+    <section class="patient-summary-grid">
+        <article class="patient-summary-card">
+            <span>Consultas</span>
+            <strong>{{ appointments|length }}</strong>
+            <small>registros recentes</small>
+        </article>
+        <article class="patient-summary-card">
+            <span>Exames</span>
+            <strong>{{ exams|length }}</strong>
+            <small>liberados</small>
+        </article>
+        <article class="patient-summary-card">
+            <span>Documentos</span>
+            <strong>{{ documents|length }}</strong>
+            <small>receitas e laudos</small>
+        </article>
+        <article class="patient-summary-card">
+            <span>Planos</span>
+            <strong>{{ plans|length }}</strong>
+            <small>vinculados</small>
+        </article>
+    </section>
+
+    <div class="patient-main-grid">
+        <section class="patient-card patient-card-large" id="consultas">
+            <div class="patient-card-head">
+                <div class="patient-card-icon"><i data-lucide="calendar-clock"></i></div>
+                <div>
+                    <h2>Próxima consulta</h2>
+                    <p>Situação e data do seu próximo atendimento.</p>
+                </div>
+            </div>
+            <div class="patient-list">
+                {% for item in next_appointment %}
+                <div class="patient-row important">
+                    <strong>{{ item.scheduled_at|date:'d/m/Y H:i' }}</strong>
+                    <span>{{ item.specialty|default:'Consulta' }} com {{ item.doctor|default:'médico a definir' }}</span>
+                    <em>{{ item.status }}</em>
+                </div>
+                {% empty %}
+                <div class="patient-row empty">Nenhuma próxima consulta confirmada.</div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section class="patient-card" id="meus-dados">
+            <div class="patient-card-head compact">
+                <div class="patient-card-icon"><i data-lucide="id-card"></i></div>
+                <div>
+                    <h2>Meus dados</h2>
+                    <p>Informações principais do cadastro.</p>
+                </div>
+            </div>
+            <div class="patient-data-list">
+                <div><span>Documento</span><strong>{{ patient.document|default:'-' }}</strong></div>
+                <div><span>Telefone</span><strong>{{ patient.phone|default:'-' }}</strong></div>
+                <div><span>Tipo sanguíneo</span><strong>{{ patient.blood_type|default:'-' }}</strong></div>
+            </div>
+        </section>
+    </div>
+
+    <div class="patient-section-grid">
+        <section class="patient-card" id="historico">
+            <div class="patient-card-head compact"><div class="patient-card-icon"><i data-lucide="file-heart"></i></div><div><h2>Histórico médico liberado</h2><p>Registros autorizados para visualização.</p></div></div>
+            <div class="patient-list">
+                {% for item in records %}
+                <div class="patient-row"><strong>{{ item.attendance_date|date:'d/m/Y' }}</strong><span>{{ item.diagnosis|default:'Atendimento registrado'|truncatechars:120 }}</span><em>{{ item.status }}</em></div>
+                {% empty %}<div class="patient-row empty">Nenhum histórico liberado.</div>{% endfor %}
+            </div>
+        </section>
+
+        <section class="patient-card">
+            <div class="patient-card-head compact"><div class="patient-card-icon"><i data-lucide="history"></i></div><div><h2>Consultas anteriores</h2><p>Histórico resumido dos atendimentos.</p></div></div>
+            <div class="patient-list">
+                {% for item in appointments %}
+                <div class="patient-row"><strong>{{ item.scheduled_at|date:'d/m/Y H:i' }}</strong><span>{{ item.specialty|default:'Consulta' }}</span><em>{{ item.status }}</em></div>
+                {% empty %}<div class="patient-row empty">Nenhuma consulta anterior.</div>{% endfor %}
+            </div>
+        </section>
+
+        <section class="patient-card" id="gesso">
+            <div class="patient-card-head compact"><div class="patient-card-icon"><i data-lucide="bone"></i></div><div><h2>Retirada de gesso</h2><p>Procedimentos e orientação de retorno.</p></div></div>
+            <div class="patient-list">
+                {% for item in plaster_records %}
+                <div class="patient-row"><strong>{{ item.body_part }}</strong><span>Retirada: {% if item.removal_date %}{{ item.removal_date|date:'d/m/Y' }}{% else %}não informada{% endif %}</span><em>{{ item.status }}</em></div>
+                {% empty %}<div class="patient-row empty">Nenhum registro de gesso.</div>{% endfor %}
+            </div>
+        </section>
+
+        <section class="patient-card" id="exames">
+            <div class="patient-card-head compact"><div class="patient-card-icon"><i data-lucide="clipboard-list"></i></div><div><h2>Exames liberados</h2><p>Laudos e solicitações disponíveis.</p></div></div>
+            <div class="patient-list">
+                {% for item in exams %}
+                <div class="patient-row"><strong>{{ item.exam_type }}</strong><span>{{ item.issue_date|date:'d/m/Y' }}</span><em>{{ item.status }}</em></div>
+                {% empty %}<div class="patient-row empty">Nenhum exame liberado.</div>{% endfor %}
+            </div>
+        </section>
+
+        <section class="patient-card" id="documentos">
+            <div class="patient-card-head compact"><div class="patient-card-icon"><i data-lucide="file-signature"></i></div><div><h2>Prescrições e documentos</h2><p>Receitas, atestados e documentos emitidos.</p></div></div>
+            <div class="patient-list">
+                {% for item in documents %}
+                <div class="patient-row"><strong>{{ item.document_type }}</strong><span>{{ item.issue_date|date:'d/m/Y' }}</span><em>{{ item.status }}</em></div>
+                {% empty %}<div class="patient-row empty">Nenhum documento disponível.</div>{% endfor %}
+            </div>
+        </section>
+
+        <section class="patient-card" id="planos">
+            <div class="patient-card-head compact"><div class="patient-card-icon"><i data-lucide="shield-check"></i></div><div><h2>Plano de saúde</h2><p>Benefícios vinculados ao seu cadastro.</p></div></div>
+            <div class="patient-list">
+                {% for item in plans %}
+                <div class="patient-row"><strong>{{ item.provider|default:item.plan_type }}</strong><span>R$ {{ item.value }}</span><em>{{ item.status }}</em></div>
+                {% empty %}<div class="patient-row empty">Nenhum plano vinculado.</div>{% endfor %}
+            </div>
+        </section>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block page_title %}Arquivados{% endblock %}
+{% block content %}
+<div class="mb-6">
+    <div class="text-sm uppercase tracking-[.25em] text-emerald-300/70">Histórico</div>
+    <h1 class="mt-1 text-3xl font-bold">Registros Arquivados</h1>
+    <p class="mt-2 text-sm text-slate-400">Nada é apagado definitivamente sem permissão administrativa.</p>
+</div>
+<div class="rounded-[1.5rem] border border-emerald-900/40 bg-[#0f1f18]/80 p-6 shadow-glow">
+    <div class="space-y-3">
+        {% for item in items %}
+        <div class="flex flex-col justify-between gap-2 rounded-2xl border border-emerald-900/30 bg-slate-950/40 p-4 text-sm md:flex-row md:items-center">
+            <div>
+                <div class="font-semibold">{{ item.object_label }}</div>
+                <div class="text-slate-500">{{ item.module }} - arquivado em {{ item.created_at|date:'d/m/Y H:i' }}</div>
+            </div>
+            <div class="text-slate-400">{{ item.archived_by|default:'Sistema' }}</div>
+        </div>
+        {% empty %}
+        <div class="text-slate-400">Nenhum item arquivado.</div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
