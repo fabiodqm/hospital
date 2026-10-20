@@ -1,8 +1,26 @@
+# Secrets / environment
 .env
-.venv/
-db.sqlite3
-media/
-test-results/
-.install.ok
+.env.*
+!.env.example
+
+# Python
 __pycache__/
 *.py[cod]
+.venv/
+venv/
+
+# Local database and private user uploads (migrate separately)
+db.sqlite3
+media/
+staticfiles/
+
+# Local test/build artifacts
+test-results/
+.install.ok
+.coverage
+.pytest_cache/
+
+# Data exports can contain sensitive medical/personal information
+*.fixture
+*.jsonl
+shine-data-export.json

@@ -2,15 +2,29 @@ import os
 from pathlib import Path
 
 from dotenv import load_dotenv
+from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / '.env')
 
-SECRET_KEY = os.getenv('SECRET_KEY', 'dev-only-change-me')
-DEBUG = os.getenv('DEBUG', 'True').lower() in {'1', 'true', 'yes', 'on'}
+_render_environment = bool(os.getenv('RENDER') or os.getenv('RENDER_EXTERNAL_HOSTNAME'))
+DEBUG = os.getenv('DEBUG', 'False' if _render_environment else 'True').lower() in {'1', 'true', 'yes', 'on'}
+SECRET_KEY = os.getenv('SECRET_KEY', '')
+if not SECRET_KEY:
+    if DEBUG:
+        SECRET_KEY = 'local-development-only-insecure-key-change-me'
+    else:
+        raise ImproperlyConfigured('SECRET_KEY precisa estar configurada no ambiente de produção.')
 
 ALLOWED_HOSTS = [h.strip() for h in os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost').split(',') if h.strip()]
+RENDER_EXTERNAL_HOSTNAME = os.getenv('RENDER_EXTERNAL_HOSTNAME', '').strip()
+if RENDER_EXTERNAL_HOSTNAME and RENDER_EXTERNAL_HOSTNAME not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 CSRF_TRUSTED_ORIGINS = [h.strip() for h in os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',') if h.strip()]
+if RENDER_EXTERNAL_HOSTNAME:
+    _render_origin = f'https://{RENDER_EXTERNAL_HOSTNAME}'
+    if _render_origin not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS.append(_render_origin)
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -34,7 +48,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 if not DEBUG:
-    MIDDLEWARE.insert(3, 'whitenoise.middleware.WhiteNoiseMiddleware')
+    MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
 
 ROOT_URLCONF = 'config.urls'
 
@@ -65,10 +79,12 @@ if DATABASE_URL:
         'default': dj_database_url.config(
             default=DATABASE_URL,
             conn_max_age=600,
-            ssl_require='sslmode=require' not in DATABASE_URL,
+            ssl_require=not DEBUG,
         )
     }
 else:
+    if not DEBUG:
+        raise ImproperlyConfigured('DATABASE_URL precisa apontar para o PostgreSQL de produção; SQLite não é permitido com DEBUG=False.')
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
@@ -91,11 +107,52 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / 'static'] if (BASE_DIR / 'static').exists() else []
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-WHITENOISE_USE_FINDERS = os.getenv('WHITENOISE_USE_FINDERS', 'True').lower() in {'1', 'true', 'yes', 'on'}
+WHITENOISE_USE_FINDERS = os.getenv('WHITENOISE_USE_FINDERS', 'False' if not DEBUG else 'True').lower() in {'1', 'true', 'yes', 'on'}
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_STORAGE = os.getenv('MEDIA_STORAGE', 'local').strip().lower()
+if MEDIA_STORAGE == 'supabase':
+    _s3_required = {
+        'SUPABASE_S3_ENDPOINT_URL': os.getenv('SUPABASE_S3_ENDPOINT_URL', '').strip(),
+        'SUPABASE_S3_REGION': os.getenv('SUPABASE_S3_REGION', '').strip(),
+        'SUPABASE_S3_BUCKET': os.getenv('SUPABASE_S3_BUCKET', '').strip(),
+        'SUPABASE_S3_ACCESS_KEY_ID': os.getenv('SUPABASE_S3_ACCESS_KEY_ID', '').strip(),
+        'SUPABASE_S3_SECRET_ACCESS_KEY': os.getenv('SUPABASE_S3_SECRET_ACCESS_KEY', '').strip(),
+    }
+    _s3_missing = [name for name, value in _s3_required.items() if not value]
+    if _s3_missing:
+        raise ImproperlyConfigured('Armazenamento Supabase S3 incompleto. Configure: ' + ', '.join(_s3_missing))
+    if not _s3_required['SUPABASE_S3_ENDPOINT_URL'].startswith('https://'):
+        raise ImproperlyConfigured('SUPABASE_S3_ENDPOINT_URL deve usar HTTPS em produção.')
+    STORAGES = {
+        'default': {
+            'BACKEND': 'storages.backends.s3.S3Storage',
+            'OPTIONS': {
+                'access_key': _s3_required['SUPABASE_S3_ACCESS_KEY_ID'],
+                'secret_key': _s3_required['SUPABASE_S3_SECRET_ACCESS_KEY'],
+                'bucket_name': _s3_required['SUPABASE_S3_BUCKET'],
+                'endpoint_url': _s3_required['SUPABASE_S3_ENDPOINT_URL'],
+                'region_name': _s3_required['SUPABASE_S3_REGION'],
+                'addressing_style': 'path',
+                'signature_version': 's3v4',
+                'querystring_auth': True,
+                'querystring_expire': 300,
+                'file_overwrite': False,
+                'default_acl': None,
+            },
+        },
+        'staticfiles': {
+            'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+        },
+    }
+elif MEDIA_STORAGE == 'local':
+    STORAGES = {
+        'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+        'staticfiles': {'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage'},
+    }
+else:
+    raise ImproperlyConfigured('MEDIA_STORAGE deve ser local ou supabase.')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -122,6 +179,14 @@ SESSION_COOKIE_HTTPONLY = True
 CSRF_COOKIE_HTTPONLY = False
 SESSION_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_SSL_REDIRECT = not DEBUG
+SECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0
+SECURE_HSTS_INCLUDE_SUBDOMAINS = not DEBUG
+SECURE_HSTS_PRELOAD = not DEBUG
+SECURE_REFERRER_POLICY = 'same-origin'
 SECURE_BROWSER_XSS_FILTER = True
 FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
 DATA_UPLOAD_MAX_MEMORY_SIZE = 8 * 1024 * 1024

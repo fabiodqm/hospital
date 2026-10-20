@@ -104,3 +104,7 @@ Fluxo sugerido:
 5. Editar o laudo.
 6. Marcar assinatura e salvar.
 7. Abrir o documento do exame.
+
+## Deploy em produção (Render + Supabase)
+
+Consulte `DEPLOY_RENDER_SUPABASE.md` para configurar o Render, conectar o PostgreSQL do Supabase, usar Supabase Storage S3 para mídia privada e migrar dados locais com segurança. Não envie `.env`, `db.sqlite3`, arquivos de exportação ou mídia privada para o GitHub.
